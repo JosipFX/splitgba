@@ -12,6 +12,10 @@ endif()
 # Binaries ohne installierte Abhaengigkeiten laufen.
 option(VENDOR_SDL2 "SDL2 statisch mitbauen (fuer eigenstaendige Release-Builds)" OFF)
 
+# mGBA 0.10.x deklariert eine sehr alte CMake-Mindestversion; ab CMake 4
+# braucht es diese Freigabe, um weiterhin konfiguriert werden zu koennen.
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+
 # libmgba als eingebettete statische Bibliothek (EXCLUDE_FROM_ALL aktiviert
 # in mGBAs CMake automatisch LIBMGBA_ONLY: keine Frontends, keine Extras).
 add_subdirectory(third_party/mgba EXCLUDE_FROM_ALL)
