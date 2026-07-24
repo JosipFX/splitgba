@@ -92,7 +92,6 @@ struct App {
 	int numPlayers = 0;
 	std::atomic<int> speedIdx{0};
 	std::atomic<bool> turbo{false};
-	std::atomic<int> audioMode{0};  // 0=alle, 1..4=nur Spieler N, 5=stumm
 	bool audioOk = false;
 	bool freeRun = false;  // Screenshot-/Testmodus: ungebremst laufen lassen
 	SDL_AudioDeviceID audioDev = 0;
@@ -106,10 +105,24 @@ struct App {
 	uint64_t timerAccumMs = 0;
 	uint64_t timerStartTick = 0;
 
+	// Einstellungen (Menue, persistiert in ~/.config/splitgba.ini)
+	std::string playerName[MAX_PLAYERS];
+	std::atomic<int> playerVol[MAX_PLAYERS] = {100, 100, 100, 100};  // Prozent, 0-150
+	std::atomic<bool> masterMute{false};
+	std::atomic<int> timerMode{1};  // 0=aus, 1=Stoppuhr, 2=Countdown
+	std::atomic<int> countdownMin{30};
+
+	// Menue-Zustand
+	bool menuOpen = false;
+	int menuSel = 0;
+	bool editingName = false;
+	int editingIndex = -1;
+	std::string editBuffer;
+	bool pausedBeforeMenu = false;
+
 	bool hudVisible = true;
 	bool fullscreen = false;
 	bool smooth = false;
-	bool mute = false;
 
 	SDL_Window* window = nullptr;
 	SDL_Renderer* renderer = nullptr;
@@ -365,19 +378,18 @@ static void detachLink() {
 // Audio: ein Geraet, alle Cores werden gemischt
 
 static int mixGain(int playerIndex) {
-	int mode = g_app.audioMode.load();
-	if (mode == 5 || g_app.mute) {
+	if (g_app.masterMute.load()) {
 		return 0;
 	}
-	if (mode > 0) {
-		return (mode - 1 == playerIndex) ? 256 : 0;
-	}
+	int base;
 	switch (g_app.numPlayers) {
-	case 1: return 256;
-	case 2: return 144;
-	case 3: return 112;
-	default: return 96;
+	case 1: base = 256; break;
+	case 2: base = 144; break;
+	case 3: base = 112; break;
+	default: base = 96; break;
 	}
+	int vol = std::clamp(g_app.playerVol[playerIndex].load(), 0, 150);
+	return base * vol / 100;
 }
 
 static void audioCallback(void*, Uint8* stream, int len) {
@@ -500,10 +512,10 @@ static bool bootPlayer(Player& p, int index, const std::string& rom, bool dupRom
 
 	std::string title = baseName(stripExtension(rom));
 	std::transform(title.begin(), title.end(), title.begin(), ::toupper);
-	if (title.size() > 24) {
-		title.resize(24);
+	if (title.size() > 20) {
+		title.resize(20);
 	}
-	p.label = "P" + std::to_string(index + 1) + " " + title;
+	p.label = title;
 
 	p.thread = {};
 	p.thread.core = p.core;
@@ -619,6 +631,23 @@ static std::string formatTimer(uint64_t ms) {
 	unsigned tenths = (unsigned)((ms / 100) % 10);
 	snprintf(buf, sizeof(buf), "%02u:%02u.%u", minutes, seconds, tenths);
 	return buf;
+}
+
+// Anzeigewert je nach Modus: Stoppuhr zaehlt hoch, Countdown herunter.
+static uint64_t displayTimerMs() {
+	uint64_t elapsed = timerElapsedMs();
+	if (g_app.timerMode.load() == 2) {
+		uint64_t total = (uint64_t)g_app.countdownMin.load() * 60000;
+		return elapsed >= total ? 0 : total - elapsed;
+	}
+	return elapsed;
+}
+
+static bool countdownExpired() {
+	if (g_app.timerMode.load() != 2) {
+		return false;
+	}
+	return timerElapsedMs() >= (uint64_t)g_app.countdownMin.load() * 60000;
 }
 
 // ---------------------------------------------------------------------------
@@ -752,6 +781,290 @@ static void togglePause() {
 }
 
 // ---------------------------------------------------------------------------
+// Einstellungen: Laden/Speichern (~/.config/splitgba.ini)
+
+static std::string settingsPath() {
+	const char* home = getenv("HOME");
+	std::string dir = std::string(home ? home : ".") + "/.config";
+	mkdir(dir.c_str(), 0755);
+	return dir + "/splitgba.ini";
+}
+
+static void loadSettings() {
+	FILE* f = fopen(settingsPath().c_str(), "r");
+	if (!f) {
+		return;
+	}
+	char line[256];
+	while (fgets(line, sizeof(line), f)) {
+		char* eq = strchr(line, '=');
+		if (!eq) {
+			continue;
+		}
+		*eq = 0;
+		std::string key = line;
+		std::string val = eq + 1;
+		while (!val.empty() && (val.back() == '\n' || val.back() == '\r')) {
+			val.pop_back();
+		}
+		for (int i = 0; i < MAX_PLAYERS; ++i) {
+			if (key == "name" + std::to_string(i + 1)) {
+				g_app.playerName[i] = val.substr(0, 10);
+			}
+			if (key == "vol" + std::to_string(i + 1)) {
+				g_app.playerVol[i].store(std::clamp(atoi(val.c_str()), 0, 150));
+			}
+		}
+		if (key == "speed") {
+			g_app.speedIdx.store(std::clamp(atoi(val.c_str()) - 1, 0, 3));
+		} else if (key == "timer") {
+			g_app.timerMode.store(std::clamp(atoi(val.c_str()), 0, 2));
+		} else if (key == "countdown_min") {
+			g_app.countdownMin.store(std::clamp(atoi(val.c_str()), 1, 120));
+		} else if (key == "hud") {
+			g_app.hudVisible = atoi(val.c_str()) != 0;
+		} else if (key == "smooth") {
+			g_app.smooth = atoi(val.c_str()) != 0;
+		} else if (key == "mute") {
+			g_app.masterMute.store(atoi(val.c_str()) != 0);
+		}
+	}
+	fclose(f);
+}
+
+static void saveSettings() {
+	FILE* f = fopen(settingsPath().c_str(), "w");
+	if (!f) {
+		return;
+	}
+	for (int i = 0; i < MAX_PLAYERS; ++i) {
+		fprintf(f, "name%d=%s\n", i + 1, g_app.playerName[i].c_str());
+		fprintf(f, "vol%d=%d\n", i + 1, g_app.playerVol[i].load());
+	}
+	fprintf(f, "speed=%d\n", g_app.speedIdx.load() + 1);
+	fprintf(f, "timer=%d\n", g_app.timerMode.load());
+	fprintf(f, "countdown_min=%d\n", g_app.countdownMin.load());
+	fprintf(f, "hud=%d\n", g_app.hudVisible ? 1 : 0);
+	fprintf(f, "smooth=%d\n", g_app.smooth ? 1 : 0);
+	fprintf(f, "mute=%d\n", g_app.masterMute.load() ? 1 : 0);
+	fclose(f);
+}
+
+// ---------------------------------------------------------------------------
+// Einstellungsmenue
+
+enum MenuId {
+	MI_NAME0 = 0, MI_NAME1, MI_NAME2, MI_NAME3,
+	MI_VOL0, MI_VOL1, MI_VOL2, MI_VOL3,
+	MI_SPEED, MI_TIMERMODE, MI_COUNTDOWN,
+	MI_MUTE, MI_HUD, MI_SMOOTH, MI_FULLSCREEN,
+	MI_CLOSE, MI_QUIT,
+};
+
+static const int COUNTDOWN_STEPS[] = {1, 2, 3, 5, 10, 15, 20, 30, 45, 60, 90, 120};
+
+static std::vector<int> menuItems() {
+	std::vector<int> items;
+	for (int i = 0; i < g_app.numPlayers; ++i) {
+		items.push_back(MI_NAME0 + i);
+	}
+	for (int i = 0; i < g_app.numPlayers; ++i) {
+		items.push_back(MI_VOL0 + i);
+	}
+	items.push_back(MI_SPEED);
+	items.push_back(MI_TIMERMODE);
+	if (g_app.timerMode.load() == 2) {
+		items.push_back(MI_COUNTDOWN);
+	}
+	items.push_back(MI_MUTE);
+	items.push_back(MI_HUD);
+	items.push_back(MI_SMOOTH);
+	items.push_back(MI_FULLSCREEN);
+	items.push_back(MI_CLOSE);
+	items.push_back(MI_QUIT);
+	return items;
+}
+
+static void applySmoothMode() {
+	for (int i = 0; i < g_app.numPlayers; ++i) {
+		if (g_players[i].tex) {
+			SDL_SetTextureScaleMode(g_players[i].tex,
+			                        g_app.smooth ? SDL_ScaleModeLinear : SDL_ScaleModeNearest);
+		}
+	}
+}
+
+static void toggleFullscreen() {
+	g_app.fullscreen = !g_app.fullscreen;
+	SDL_SetWindowFullscreen(g_app.window, g_app.fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+	SDL_ShowCursor(g_app.fullscreen ? SDL_DISABLE : SDL_ENABLE);
+}
+
+static void menuOpen() {
+	g_app.menuOpen = true;
+	g_app.menuSel = 0;
+	g_app.keyboardKeys = 0;  // haengengebliebene Spieltasten loesen
+	g_app.pausedBeforeMenu = g_app.paused;
+	if (!g_app.paused) {
+		togglePause();
+	}
+}
+
+static void menuClose() {
+	if (g_app.editingName) {
+		g_app.editingName = false;
+		SDL_StopTextInput();
+	}
+	g_app.menuOpen = false;
+	saveSettings();
+	if (!g_app.pausedBeforeMenu && g_app.paused) {
+		togglePause();
+	}
+}
+
+// Links/Rechts auf einem Menuepunkt
+static void menuAdjust(int id, int dir, bool* quit) {
+	(void)quit;
+	if (id >= MI_VOL0 && id <= MI_VOL3) {
+		int i = id - MI_VOL0;
+		g_app.playerVol[i].store(std::clamp(g_app.playerVol[i].load() + dir * 10, 0, 150));
+	} else if (id == MI_SPEED) {
+		g_app.speedIdx.store(std::clamp(g_app.speedIdx.load() + dir, 0, 3));
+		applySpeed();
+	} else if (id == MI_TIMERMODE) {
+		g_app.timerMode.store((g_app.timerMode.load() + dir + 3) % 3);
+	} else if (id == MI_COUNTDOWN) {
+		int cur = g_app.countdownMin.load();
+		int n = (int)(sizeof(COUNTDOWN_STEPS) / sizeof(int));
+		int idx = 0;
+		for (int i = 0; i < n; ++i) {
+			if (COUNTDOWN_STEPS[i] <= cur) {
+				idx = i;
+			}
+		}
+		idx = std::clamp(idx + dir, 0, n - 1);
+		g_app.countdownMin.store(COUNTDOWN_STEPS[idx]);
+	} else if (id == MI_MUTE) {
+		g_app.masterMute.store(!g_app.masterMute.load());
+	} else if (id == MI_HUD) {
+		g_app.hudVisible = !g_app.hudVisible;
+	} else if (id == MI_SMOOTH) {
+		g_app.smooth = !g_app.smooth;
+		applySmoothMode();
+	} else if (id == MI_FULLSCREEN) {
+		toggleFullscreen();
+	}
+}
+
+// Enter/A auf einem Menuepunkt
+static void menuActivate(int id, bool* quit) {
+	if (id >= MI_NAME0 && id <= MI_NAME3) {
+		g_app.editingName = true;
+		g_app.editingIndex = id - MI_NAME0;
+		g_app.editBuffer = g_app.playerName[g_app.editingIndex];
+		SDL_StartTextInput();
+	} else if (id == MI_CLOSE) {
+		menuClose();
+	} else if (id == MI_QUIT) {
+		*quit = true;
+	} else {
+		menuAdjust(id, +1, quit);
+	}
+}
+
+static void menuNav(int dir) {
+	std::vector<int> items = menuItems();
+	g_app.menuSel = ((g_app.menuSel + dir) % (int)items.size() + (int)items.size()) %
+	                (int)items.size();
+}
+
+static void menuHandleKey(const SDL_KeyboardEvent& ev, bool* quit) {
+	SDL_Keycode key = ev.keysym.sym;
+
+	if (g_app.editingName) {
+		if (key == SDLK_RETURN || key == SDLK_KP_ENTER) {
+			g_app.playerName[g_app.editingIndex] = g_app.editBuffer;
+			g_app.editingName = false;
+			SDL_StopTextInput();
+		} else if (key == SDLK_ESCAPE) {
+			g_app.editingName = false;
+			SDL_StopTextInput();
+		} else if (key == SDLK_BACKSPACE && !g_app.editBuffer.empty()) {
+			g_app.editBuffer.pop_back();
+		}
+		return;
+	}
+
+	std::vector<int> items = menuItems();
+	if (g_app.menuSel >= (int)items.size()) {
+		g_app.menuSel = 0;
+	}
+	int id = items[g_app.menuSel];
+
+	switch (key) {
+	case SDLK_ESCAPE:
+		menuClose();
+		break;
+	case SDLK_UP:
+		menuNav(-1);
+		break;
+	case SDLK_DOWN:
+		menuNav(+1);
+		break;
+	case SDLK_LEFT:
+		menuAdjust(id, -1, quit);
+		break;
+	case SDLK_RIGHT:
+		menuAdjust(id, +1, quit);
+		break;
+	case SDLK_RETURN:
+	case SDLK_KP_ENTER:
+		menuActivate(id, quit);
+		break;
+	default:
+		break;
+	}
+}
+
+static void menuHandlePad(const SDL_ControllerButtonEvent& ev, bool* quit) {
+	if (g_app.editingName) {
+		return;  // Namen nur per Tastatur
+	}
+	std::vector<int> items = menuItems();
+	if (g_app.menuSel >= (int)items.size()) {
+		g_app.menuSel = 0;
+	}
+	int id = items[g_app.menuSel];
+	switch (ev.button) {
+	case SDL_CONTROLLER_BUTTON_DPAD_UP: menuNav(-1); break;
+	case SDL_CONTROLLER_BUTTON_DPAD_DOWN: menuNav(+1); break;
+	case SDL_CONTROLLER_BUTTON_DPAD_LEFT: menuAdjust(id, -1, quit); break;
+	case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: menuAdjust(id, +1, quit); break;
+	case SDL_CONTROLLER_BUTTON_A: menuActivate(id, quit); break;
+	case SDL_CONTROLLER_BUTTON_B:
+	case SDL_CONTROLLER_BUTTON_START: menuClose(); break;
+	default: break;
+	}
+}
+
+static void menuHandleText(const SDL_TextInputEvent& ev) {
+	if (!g_app.editingName) {
+		return;
+	}
+	for (const char* c = ev.text; *c; ++c) {
+		char ch = *c;
+		if (ch >= 'a' && ch <= 'z') {
+			ch = (char)(ch - 'a' + 'A');
+		}
+		bool ok = (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == ' ' ||
+		          ch == '-' || ch == '_';
+		if (ok && g_app.editBuffer.size() < 10) {
+			g_app.editBuffer.push_back(ch);
+		}
+	}
+}
+
+// ---------------------------------------------------------------------------
 // Text-Rendering (Font-Atlas aus font5x7.h)
 
 static SDL_Texture* buildFontTexture(SDL_Renderer* renderer) {
@@ -863,27 +1176,138 @@ static void fillRect(int x, int y, int w, int h, uint8_t r, uint8_t g, uint8_t b
 	SDL_RenderFillRect(g_app.renderer, &rect);
 }
 
+static void hudAppend(std::string& line, const std::string& part) {
+	if (!line.empty()) {
+		line += "  ";
+	}
+	line += part;
+}
+
 static std::string hudLine() {
-	std::string line = formatTimer(timerElapsedMs());
+	std::string line;
+	if (g_app.timerMode.load() != 0) {
+		hudAppend(line, formatTimer(displayTimerMs()));
+		if (countdownExpired()) {
+			hudAppend(line, "ZEIT!");
+		}
+	}
 	char speed[16];
-	snprintf(speed, sizeof(speed), "  %gX", currentSpeed());
-	line += speed;
+	snprintf(speed, sizeof(speed), "%gX", currentSpeed());
+	hudAppend(line, speed);
 	if (g_app.linked) {
-		line += "  LINK";
+		hudAppend(line, "LINK");
 	}
-	int mode = g_app.audioMode.load();
-	if (g_app.mute || mode == 5) {
-		line += "  TON AUS";
-	} else if (mode > 0) {
-		line += "  TON P" + std::to_string(mode);
+	if (g_app.masterMute.load()) {
+		hudAppend(line, "STUMM");
 	}
-	if (g_app.paused) {
-		line += "  PAUSE";
+	if (g_app.paused && !g_app.menuOpen) {
+		hudAppend(line, "PAUSE");
 	}
 	return line;
 }
 
+// Ein Menuepunkt: Beschriftung + aktueller Wert
+static void menuItemText(int id, std::string& label, std::string& value) {
+	if (id >= MI_NAME0 && id <= MI_NAME3) {
+		int i = id - MI_NAME0;
+		label = "NAME SPIELER " + std::to_string(i + 1);
+		if (g_app.editingName && g_app.editingIndex == i) {
+			value = g_app.editBuffer + ((SDL_GetTicks64() / 400) % 2 ? "_" : " ");
+		} else {
+			value = g_app.playerName[i].empty() ? "---" : g_app.playerName[i];
+		}
+	} else if (id >= MI_VOL0 && id <= MI_VOL3) {
+		int i = id - MI_VOL0;
+		label = "LAUTSTAERKE P" + std::to_string(i + 1);
+		value = std::to_string(g_app.playerVol[i].load()) + " PROZENT";
+	} else if (id == MI_SPEED) {
+		label = "TEMPO";
+		value = std::to_string(g_app.speedIdx.load() + 1) + "X";
+	} else if (id == MI_TIMERMODE) {
+		label = "TIMER";
+		int m = g_app.timerMode.load();
+		value = m == 0 ? "AUS" : (m == 1 ? "STOPPUHR" : "COUNTDOWN");
+	} else if (id == MI_COUNTDOWN) {
+		label = "COUNTDOWN-DAUER";
+		value = std::to_string(g_app.countdownMin.load()) + " MIN";
+	} else if (id == MI_MUTE) {
+		label = "TON";
+		value = g_app.masterMute.load() ? "STUMM" : "AN";
+	} else if (id == MI_HUD) {
+		label = "ANZEIGEN (HUD)";
+		value = g_app.hudVisible ? "AN" : "AUS";
+	} else if (id == MI_SMOOTH) {
+		label = "GLAETTUNG";
+		value = g_app.smooth ? "AN" : "AUS";
+	} else if (id == MI_FULLSCREEN) {
+		label = "VOLLBILD";
+		value = g_app.fullscreen ? "AN" : "AUS";
+	} else if (id == MI_CLOSE) {
+		label = "SCHLIESSEN";
+		value = "";
+	} else if (id == MI_QUIT) {
+		label = "SPLITGBA BEENDEN";
+		value = "";
+	}
+}
+
+static void drawMenu(int outW, int outH) {
+	std::vector<int> items = menuItems();
+	if (g_app.menuSel >= (int)items.size()) {
+		g_app.menuSel = (int)items.size() - 1;
+	}
+
+	int scale = std::max(2, outH / 450);
+	int rowH = (splitfont::GLYPH_H + 4) * scale;
+	int labelCol = 18 * splitfont::ADVANCE * scale;
+	int valueCol = 14 * splitfont::ADVANCE * scale;
+	int panelW = labelCol + valueCol + 40 * scale;
+	int panelH = ((int)items.size() + 4) * rowH;
+	int px = (outW - panelW) / 2;
+	int py = (outH - panelH) / 2;
+
+	fillRect(px, py, panelW, panelH, 10, 10, 14, 235);
+	SDL_SetRenderDrawBlendMode(g_app.renderer, SDL_BLENDMODE_NONE);
+	SDL_SetRenderDrawColor(g_app.renderer, 90, 90, 110, 255);
+	SDL_Rect frame = {px, py, panelW, panelH};
+	SDL_RenderDrawRect(g_app.renderer, &frame);
+
+	std::string title = "EINSTELLUNGEN";
+	drawText(title, px + (panelW - textWidth(title, scale)) / 2, py + rowH / 2, scale,
+	         120, 200, 255);
+
+	int y = py + rowH * 2;
+	for (int n = 0; n < (int)items.size(); ++n) {
+		std::string label, value;
+		menuItemText(items[n], label, value);
+		bool sel = n == g_app.menuSel;
+		uint8_t r = sel ? 255 : 200;
+		uint8_t g = sel ? 220 : 200;
+		uint8_t b = sel ? 120 : 205;
+		if (sel) {
+			fillRect(px + 8 * scale, y - 2 * scale, panelW - 16 * scale, rowH, 60, 60, 80, 160);
+			drawText(">", px + 10 * scale, y, scale, 255, 220, 120);
+		}
+		drawText(label, px + 20 * scale, y, scale, r, g, b);
+		drawText(value, px + 20 * scale + labelCol, y, scale, r, g, b);
+		y += rowH;
+	}
+
+	std::string hint = g_app.editingName
+	    ? "TIPPEN: NAME  ENTER: OK  ESC: ABBRECHEN"
+	    : "PFEILE: WAEHLEN/AENDERN  ENTER: OK  ESC: SCHLIESSEN";
+	int hs = std::max(1, scale - 1);
+	drawText(hint, px + (panelW - textWidth(hint, hs)) / 2, py + panelH - rowH + 2 * scale,
+	         hs, 150, 150, 160);
+}
+
 static void renderFrame(int outW, int outH) {
+	// Countdown bei 0 automatisch anhalten
+	if (g_app.timerMode.load() == 2 && g_app.timerRunning.load() && countdownExpired()) {
+		timerToggle();
+		g_app.timerAccumMs = (uint64_t)g_app.countdownMin.load() * 60000;
+	}
+
 	SDL_SetRenderDrawBlendMode(g_app.renderer, SDL_BLENDMODE_NONE);
 	SDL_SetRenderDrawColor(g_app.renderer, 16, 16, 20, 255);
 	SDL_RenderClear(g_app.renderer);
@@ -900,15 +1324,12 @@ static void renderFrame(int outW, int outH) {
 		SDL_Rect dst = fitGBA(lay.cells[i]);
 		SDL_RenderCopy(g_app.renderer, p.tex, nullptr, &dst);
 
-		// Rahmen fuer den Solo-Audio-Spieler
-		if (g_app.audioMode.load() == i + 1) {
-			SDL_SetRenderDrawBlendMode(g_app.renderer, SDL_BLENDMODE_NONE);
-			SDL_SetRenderDrawColor(g_app.renderer, 120, 200, 120, 255);
-			SDL_RenderDrawRect(g_app.renderer, &dst);
-		}
-
 		if (g_app.hudVisible) {
-			std::string label = p.label;
+			std::string label = "P" + std::to_string(i + 1);
+			if (!g_app.playerName[i].empty()) {
+				label += " " + g_app.playerName[i];
+			}
+			label += " - " + p.label;
 			label += p.pad ? " (PAD)" : (i == 0 ? " (TASTATUR)" : " (KEIN PAD)");
 			if (mCoreThreadHasCrashed(&p.thread)) {
 				label += " !ABSTURZ!";
@@ -926,16 +1347,17 @@ static void renderFrame(int outW, int outH) {
 	}
 
 	std::string hud = hudLine();
-	if (lay.hasHudCell) {
+	if (lay.hasHudCell && g_app.timerMode.load() != 0) {
 		// 3 Spieler: die freie Kachel wird zur grossen Anzeige
 		int timerScale = std::max(2, lay.hudCell.w / (8 * splitfont::ADVANCE));
-		std::string timer = formatTimer(timerElapsedMs());
+		std::string timer = formatTimer(displayTimerMs());
+		bool alarm = g_app.timerMode.load() == 2 && displayTimerMs() < 60000;
 		int tw = textWidth(timer, timerScale);
 		int tx = lay.hudCell.x + (lay.hudCell.w - tw) / 2;
 		int ty = lay.hudCell.y + lay.hudCell.h / 2 - splitfont::GLYPH_H * timerScale;
-		drawText(timer, tx, ty, timerScale, 240, 240, 240);
+		drawText(timer, tx, ty, timerScale, 240, alarm ? 90 : 240, alarm ? 90 : 240);
 		int subScale = std::max(1, timerScale / 3);
-		std::string sub = hud.substr(timer.size());
+		std::string sub = hud.size() > timer.size() ? hud.substr(timer.size()) : "";
 		int sw = textWidth(sub, subScale);
 		drawText(sub, lay.hudCell.x + (lay.hudCell.w - sw) / 2,
 		         ty + splitfont::GLYPH_H * timerScale + 12 * subScale, subScale, 180, 180, 190);
@@ -948,12 +1370,16 @@ static void renderFrame(int outW, int outH) {
 		drawText(hud, tx, ty, hudScale, 250, 250, 250);
 	}
 
-	if (g_app.paused) {
+	if (g_app.paused && !g_app.menuOpen) {
 		int ps = std::max(3, outH / 160);
 		std::string msg = "PAUSE";
 		int tw = textWidth(msg, ps);
 		fillRect((outW - tw) / 2 - 12, outH / 2 - ps * 6, tw + 24, splitfont::GLYPH_H * ps + ps * 4, 0, 0, 0, 190);
 		drawText(msg, (outW - tw) / 2, outH / 2 - ps * 4, ps, 255, 220, 120);
+	}
+
+	if (g_app.menuOpen) {
+		drawMenu(outW, outH);
 	}
 }
 
@@ -967,8 +1393,9 @@ struct Args {
 	bool noLink = false;
 	bool mute = false;
 	int copies = 1;
-	int speed = 1;
+	int speed = 0;  // 0 = nicht per CLI gesetzt (dann gilt die gespeicherte Einstellung)
 	bool listPads = false;
+	bool showMenu = false;  // Debug: Menue im Screenshot-Modus rendern
 	int exitAfterSec = 0;  // Debug: nach N Sekunden automatisch beenden
 	std::string screenshotPath;
 	int screenshotFrames = 240;
@@ -990,9 +1417,9 @@ static void usage(const char* argv0) {
 	printf("      --list-pads    erkannte Controller anzeigen und beenden\n");
 	printf("      --screenshot <datei.bmp> [--frames N]   Debug: rendern und beenden\n");
 	printf("  -h, --help         diese Hilfe\n\n");
-	printf("Tasten: 1-4/F1-F4 Tempo, Tab Turbo, Leertaste Timer, R Timer-Reset,\n");
-	printf("        Shift+R alle Spiele neu starten, P Pause, M Ton-Modus,\n");
-	printf("        F5/F9 Savestate speichern/laden, F Vollbild, H HUD, Esc Beenden\n");
+	printf("Tasten: Esc Menue (Namen, Timer, Lautstaerke, Beenden), 1-4/F1-F4 Tempo,\n");
+	printf("        Tab Turbo, Leertaste Timer, R Timer-Reset, Shift+R alle neu starten,\n");
+	printf("        P Pause, M stumm, F5/F9 Savestate speichern/laden, F Vollbild, H HUD\n");
 	printf("Spieler 1 Tastatur: Pfeile, X=A, Z/Y=B, A=L, S=R, Enter=Start, Backspace=Select\n");
 }
 
@@ -1033,6 +1460,8 @@ static bool parseArgs(int argc, char** argv, Args& args) {
 			args.copies = std::clamp(atoi(argv[++i]), 1, MAX_PLAYERS);
 		} else if (a == "--list-pads") {
 			args.listPads = true;
+		} else if (a == "--show-menu") {
+			args.showMenu = true;
 		} else if (a == "--speed" && i + 1 < argc) {
 			args.speed = std::clamp(atoi(argv[++i]), 1, 4);
 		} else if (a == "--exit-after" && i + 1 < argc) {
@@ -1072,7 +1501,7 @@ static void handleKeyDown(const SDL_KeyboardEvent& ev, bool& quit) {
 
 	switch (key) {
 	case SDLK_ESCAPE:
-		quit = true;
+		menuOpen();
 		return;
 	case SDLK_1: case SDLK_F1: g_app.speedIdx.store(0); applySpeed(); return;
 	case SDLK_2: case SDLK_F2: g_app.speedIdx.store(1); applySpeed(); return;
@@ -1085,7 +1514,7 @@ static void handleKeyDown(const SDL_KeyboardEvent& ev, bool& quit) {
 		}
 		return;
 	case SDLK_SPACE:
-		if (!ev.repeat) {
+		if (!ev.repeat && g_app.timerMode.load() != 0) {
 			timerToggle();
 		}
 		return;
@@ -1114,19 +1543,12 @@ static void handleKeyDown(const SDL_KeyboardEvent& ev, bool& quit) {
 		return;
 	case SDLK_m:
 		if (!ev.repeat) {
-			int next = g_app.audioMode.load() + 1;
-			if (next > 5 || (next >= 1 && next <= 4 && next > g_app.numPlayers)) {
-				next = next > 5 ? 0 : 5;
-			}
-			g_app.audioMode.store(next);
+			g_app.masterMute.store(!g_app.masterMute.load());
 		}
 		return;
 	case SDLK_f:
 		if (!ev.repeat) {
-			g_app.fullscreen = !g_app.fullscreen;
-			SDL_SetWindowFullscreen(g_app.window,
-			                        g_app.fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
-			SDL_ShowCursor(g_app.fullscreen ? SDL_DISABLE : SDL_ENABLE);
+			toggleFullscreen();
 		}
 		return;
 	case SDLK_h:
@@ -1215,9 +1637,17 @@ int main(int argc, char** argv) {
 	s_logger.log = quietLog;
 	mLogSetDefaultLogger(&s_logger);
 
+	loadSettings();
 	g_app.linkEnabled = !args.noLink;
-	g_app.smooth = args.smooth;
-	g_app.mute = args.mute;
+	if (args.smooth) {
+		g_app.smooth = true;
+	}
+	if (args.mute) {
+		g_app.masterMute.store(true);
+	}
+	if (args.speed) {
+		g_app.speedIdx.store(args.speed - 1);
+	}
 	g_app.fullscreen = args.fullscreen;
 	g_app.freeRun = !args.screenshotPath.empty();
 	bool screenshotMode = g_app.freeRun;
@@ -1226,7 +1656,7 @@ int main(int argc, char** argv) {
 		fprintf(stderr, "SDL-Init fehlgeschlagen: %s\n", SDL_GetError());
 		return 1;
 	}
-	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, args.smooth ? "1" : "0");
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, g_app.smooth ? "1" : "0");
 	// Controller weiterbedienen, auch wenn das Fenster kurz den Fokus verliert
 	SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
 
@@ -1304,8 +1734,8 @@ int main(int argc, char** argv) {
 		g_players[i].tex = SDL_CreateTexture(g_app.renderer, SDL_PIXELFORMAT_ABGR8888,
 		                                     SDL_TEXTUREACCESS_STREAMING, GBA_SCREEN_W, GBA_SCREEN_H);
 	}
+	applySmoothMode();
 
-	g_app.speedIdx.store(args.speed - 1);
 	applySpeed();
 	attachLink();
 
@@ -1341,6 +1771,9 @@ int main(int argc, char** argv) {
 			return 1;
 		}
 		interruptAll();
+		if (args.showMenu) {
+			g_app.menuOpen = true;  // nur fuers Bild, ohne Pause-Logik
+		}
 		int outW, outH;
 		SDL_GetRendererOutputSize(g_app.renderer, &outW, &outH);
 		renderFrame(outW, outH);
@@ -1374,10 +1807,24 @@ int main(int argc, char** argv) {
 				quit = true;
 				break;
 			case SDL_KEYDOWN:
-				handleKeyDown(ev.key, quit);
+				if (g_app.menuOpen) {
+					menuHandleKey(ev.key, &quit);
+				} else {
+					handleKeyDown(ev.key, quit);
+				}
 				break;
 			case SDL_KEYUP:
-				handleKeyUp(ev.key);
+				if (!g_app.menuOpen) {
+					handleKeyUp(ev.key);
+				}
+				break;
+			case SDL_TEXTINPUT:
+				menuHandleText(ev.text);
+				break;
+			case SDL_CONTROLLERBUTTONDOWN:
+				if (g_app.menuOpen) {
+					menuHandlePad(ev.cbutton, &quit);
+				}
 				break;
 			case SDL_CONTROLLERDEVICEADDED:
 				assignController(ev.cdevice.which);
@@ -1400,6 +1847,7 @@ int main(int argc, char** argv) {
 		SDL_RenderPresent(g_app.renderer);
 	}
 
+	saveSettings();
 	for (int i = 0; i < g_app.numPlayers; ++i) {
 		printf("Spieler %d: %llu Frames emuliert\n", i + 1,
 		       (unsigned long long)g_players[i].frameCount.load());

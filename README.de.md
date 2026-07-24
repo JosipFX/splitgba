@@ -60,21 +60,37 @@ python3 tools/make_test_rom.py
 | `--smooth` | weiche Skalierung statt scharfer Pixel |
 | `--mute` | ohne Ton starten |
 
+## Einstellungsmenü (`Esc`)
+
+`Esc` öffnet das Menü (pausiert automatisch alle Spiele) — bedienbar mit
+Tastatur **oder** Controller (D-Pad + A/B):
+
+- **Spielernamen** vergeben (erscheinen im Splitscreen-Label jedes Spielers)
+- **Lautstärke pro Spieler** (0–150 %), plus Stummschalten
+- **Timer**: Aus / Stoppuhr / **Countdown** mit einstellbarer Dauer
+  (1–120 min; bei 0 stoppt er automatisch und zeigt „ZEIT!")
+- Tempo, HUD, Glättung, Vollbild, Beenden
+
+Alle Einstellungen werden in `~/.config/splitgba.ini` gespeichert und beim
+nächsten Start automatisch geladen.
+
 ## Tasten (Hotkeys für alle)
 
 | Taste | Funktion |
 |---|---|
+| `Esc` | Einstellungsmenü öffnen/schließen |
 | `1`–`4` oder `F1`–`F4` | Tempo 1x / 2x / 3x / 4x (gilt für alle Spieler) |
 | `Tab` (halten) | Turbo 4x, solange gedrückt |
-| `Leertaste` | Race-Timer starten / stoppen |
+| `Leertaste` | Timer starten / stoppen |
 | `R` | Timer auf 0 |
 | `Shift`+`R` | **alle Spiele neu starten** + Timer auf 0 (Race-Start) |
 | `P` | Pause (alle) |
-| `M` | Ton durchschalten: alle → nur P1 → … → nur P4 → stumm |
+| `M` | Stumm an/aus |
 | `F5` / `F9` | Savestate für alle speichern / laden |
 | `F` | Vollbild an/aus |
 | `H` | Anzeigen (HUD) ein/aus |
-| `Esc` | Beenden |
+
+Beenden: übers Menü (`Esc` → „SplitGBA beenden") oder `Cmd`+`Q`.
 
 ## Controller
 

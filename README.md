@@ -86,21 +86,36 @@ Result: `./build/splitgba`
 | `--smooth` | smooth scaling instead of crisp integer pixels |
 | `--mute` | start without audio |
 
+### Settings menu (`Esc`)
+
+`Esc` opens an in-app menu (auto-pauses all games), navigable with the
+keyboard **or** any controller (d-pad + A/B):
+
+- **Player names** (shown in each player's split-screen label)
+- **Per-player volume** (0–150 %) plus a global mute
+- **Timer modes**: off / stopwatch / **countdown** with configurable
+  duration (1–120 min; it stops at zero and shows "ZEIT!")
+- Speed, HUD, smoothing, fullscreen, quit
+
+All settings persist in `~/.config/splitgba.ini`.
+
 ### Hotkeys
 
 | Key | Function |
 |---|---|
+| `Esc` | open / close the settings menu |
 | `1`–`4` / `F1`–`F4` | speed 1x / 2x / 3x / 4x (all players) |
 | `Tab` (hold) | turbo 4x while held |
-| `Space` | start / stop the race timer |
+| `Space` | start / stop the timer |
 | `R` | reset timer to zero |
 | `Shift`+`R` | **hard-reset all games** + reset timer (race start) |
 | `P` | pause all |
-| `M` | audio: everyone → player 1 → … → player 4 → mute |
+| `M` | toggle mute |
 | `F5` / `F9` | save / load a savestate for all players at once |
 | `F` | toggle fullscreen |
 | `H` | toggle HUD |
-| `Esc` | quit |
+
+Quit via the menu (`Esc` → "SplitGBA beenden") or `Cmd`+`Q`.
 
 ### Controllers
 
