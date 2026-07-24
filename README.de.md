@@ -162,7 +162,16 @@ genau wie am echten Gerät. Gen-3-Spiele (Rubin/Saphir/Smaragd/Feuerrot/
 Blattgrün) können untereinander tauschen; Feuerrot/Blattgrün brauchen dafür
 den Nationaldex (nach der Top Four).
 
+**Wichtigste Regel: Spieler 1 muss immer am Tausch/Kampf teilnehmen.**
+Im GBA-Multiplayer-Modus taktet nur Spieler 1 (Panel oben links) die
+Verbindung — wie das „Parent"-Gerät am echten Link-Kabel. Gehen z. B. nur
+Spieler 2 und 3 in den Kabelclub, kommt keine Verbindung zustande. Das HUD
+und die Link-Zeile im Einstellungsmenü zeigen live, wer im Link-Modus ist,
+und warnen, wenn Spieler 1 fehlt.
+
 Tipps:
+- Zum Tauschen am saubersten: nur die zwei Beteiligten starten (Spieler 1
+  + Partner), traden, danach wieder zu viert weiterspielen.
 - Beim Tauschen/Kämpfen aufs Tempo **1x** zurückschalten — stabiler.
 - `F5`/`F9` (Savestates) **nicht mitten in einer Link-Übertragung** benutzen.
 - Spielstände (`.sav`) liegen neben den ROMs. Bei `-n` (gleiches ROM mehrfach)

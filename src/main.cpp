@@ -121,6 +121,12 @@ struct App {
 	std::string editBuffer;
 	bool pausedBeforeMenu = false;
 
+	// Controller-Zuweisung & Menue-Status
+	bool padAssignOpen = false;
+	int padAssignSel = 0;
+	std::string menuStatus;
+	uint64_t menuStatusUntil = 0;
+
 	// Steuerungs-Uebersicht & Startmenue
 	bool helpOpen = false;
 	int launcherPlayers = 4;
@@ -887,8 +893,43 @@ enum MenuId {
 	MI_VOL0, MI_VOL1, MI_VOL2, MI_VOL3,
 	MI_SPEED, MI_TIMERMODE, MI_COUNTDOWN,
 	MI_MUTE, MI_HUD, MI_SMOOTH, MI_FULLSCREEN,
+	MI_SAVESTATE, MI_LOADSTATE, MI_LINKINFO, MI_PADS,
 	MI_CONTROLS, MI_CLOSE, MI_QUIT,
 };
+
+// Welche Spieler haben gerade den seriellen Link-Modus aktiv (Kabelclub)?
+static std::string linkPlayersInSio() {
+	std::string result;
+	if (!g_app.linked) {
+		return result;
+	}
+	for (int i = 0; i < g_app.numPlayers; ++i) {
+		struct GBA* gba = static_cast<struct GBA*>(g_players[i].core->board);
+		if (gba->sio.mode == SIO_MULTI || gba->sio.mode == SIO_NORMAL_32) {
+			if (!result.empty()) {
+				result += "+";
+			}
+			result += "P" + std::to_string(i + 1);
+		}
+	}
+	return result;
+}
+
+// Jemand ist im Link-Modus, aber Spieler 1 (der Bus-Master) fehlt?
+static bool linkNeedsMaster() {
+	if (!g_app.linked || g_app.numPlayers < 2) {
+		return false;
+	}
+	struct GBA* master = static_cast<struct GBA*>(g_players[0].core->board);
+	bool masterInSio = master->sio.mode == SIO_MULTI || master->sio.mode == SIO_NORMAL_32;
+	std::string active = linkPlayersInSio();
+	return !active.empty() && !masterInSio;
+}
+
+static void setMenuStatus(const std::string& s) {
+	g_app.menuStatus = s;
+	g_app.menuStatusUntil = SDL_GetTicks64() + 2500;
+}
 
 static const int COUNTDOWN_STEPS[] = {1, 2, 3, 5, 10, 15, 20, 30, 45, 60, 90, 120};
 
@@ -909,6 +950,10 @@ static std::vector<int> menuItems() {
 	items.push_back(MI_HUD);
 	items.push_back(MI_SMOOTH);
 	items.push_back(MI_FULLSCREEN);
+	items.push_back(MI_SAVESTATE);
+	items.push_back(MI_LOADSTATE);
+	items.push_back(MI_LINKINFO);
+	items.push_back(MI_PADS);
 	items.push_back(MI_CONTROLS);
 	items.push_back(MI_CLOSE);
 	items.push_back(MI_QUIT);
@@ -993,14 +1038,71 @@ static void menuActivate(int id, bool* quit) {
 		g_app.editingIndex = id - MI_NAME0;
 		g_app.editBuffer = g_app.playerName[g_app.editingIndex];
 		SDL_StartTextInput();
+	} else if (id == MI_SAVESTATE) {
+		saveAllStates();
+		setMenuStatus("SAVESTATES GESPEICHERT");
+	} else if (id == MI_LOADSTATE) {
+		loadAllStates();
+		setMenuStatus("SAVESTATES GELADEN");
+	} else if (id == MI_PADS) {
+		g_app.padAssignOpen = true;
+		g_app.padAssignSel = 0;
 	} else if (id == MI_CONTROLS) {
 		g_app.helpOpen = true;
+	} else if (id == MI_LINKINFO) {
+		// reine Statusanzeige
 	} else if (id == MI_CLOSE) {
 		menuClose();
 	} else if (id == MI_QUIT) {
 		*quit = true;
 	} else {
 		menuAdjust(id, +1, quit);
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Controller-Zuweisung: Spieler waehlen, Knopf auf dem Pad druecken
+
+static int padAssignPlayerCount() {
+	return g_app.numPlayers > 0 ? g_app.numPlayers : g_app.launcherPlayers;
+}
+
+static void padAssignHandleButton(SDL_JoystickID which) {
+	int target = g_app.padAssignSel;
+	int from = -1;
+	for (int i = 0; i < MAX_PLAYERS; ++i) {
+		if (g_players[i].padId == which && g_players[i].pad) {
+			from = i;
+		}
+	}
+	if (from < 0) {
+		return;
+	}
+	if (from != target) {
+		std::swap(g_players[from].pad, g_players[target].pad);
+		std::swap(g_players[from].padId, g_players[target].padId);
+		g_players[from].padKeys = 0;
+		g_players[target].padKeys = 0;
+	}
+	g_app.padAssignSel = (g_app.padAssignSel + 1) % padAssignPlayerCount();
+}
+
+static void padAssignHandleKey(const SDL_KeyboardEvent& ev) {
+	int count = padAssignPlayerCount();
+	switch (ev.keysym.sym) {
+	case SDLK_UP:
+		g_app.padAssignSel = (g_app.padAssignSel + count - 1) % count;
+		break;
+	case SDLK_DOWN:
+		g_app.padAssignSel = (g_app.padAssignSel + 1) % count;
+		break;
+	case SDLK_ESCAPE:
+	case SDLK_RETURN:
+	case SDLK_KP_ENTER:
+		g_app.padAssignOpen = false;
+		break;
+	default:
+		break;
 	}
 }
 
@@ -1227,7 +1329,11 @@ static std::string hudLine() {
 	snprintf(speed, sizeof(speed), "%gX", currentSpeed());
 	hudAppend(line, speed);
 	if (g_app.linked) {
-		hudAppend(line, "LINK");
+		std::string active = linkPlayersInSio();
+		hudAppend(line, active.empty() ? "LINK" : "LINK " + active);
+		if (linkNeedsMaster()) {
+			hudAppend(line, "! P1 MUSS MITMACHEN !");
+		}
 	}
 	if (g_app.masterMute.load()) {
 		hudAppend(line, "STUMM");
@@ -1274,6 +1380,31 @@ static void menuItemText(int id, std::string& label, std::string& value) {
 	} else if (id == MI_FULLSCREEN) {
 		label = "VOLLBILD";
 		value = g_app.fullscreen ? "AN" : "AUS";
+	} else if (id == MI_SAVESTATE) {
+		label = "SAVESTATE SPEICHERN";
+		value = "(F5)";
+	} else if (id == MI_LOADSTATE) {
+		label = "SAVESTATE LADEN";
+		value = "(F9)";
+	} else if (id == MI_LINKINFO) {
+		label = "LINK";
+		if (!g_app.linkEnabled) {
+			value = "AUS (--no-link)";
+		} else if (!g_app.linked) {
+			value = "AUS (NUR 1 SPIELER)";
+		} else {
+			std::string active = linkPlayersInSio();
+			if (active.empty()) {
+				value = "BEREIT (" + std::to_string(g_app.numPlayers) + " VERBUNDEN)";
+			} else if (linkNeedsMaster()) {
+				value = active + " AKTIV - P1 MUSS MITMACHEN!";
+			} else {
+				value = active + " IM LINK-MODUS";
+			}
+		}
+	} else if (id == MI_PADS) {
+		label = "CONTROLLER ZUWEISEN";
+		value = "";
 	} else if (id == MI_CONTROLS) {
 		label = "STEUERUNG ANZEIGEN";
 		value = "";
@@ -1294,8 +1425,8 @@ static void drawMenu(int outW, int outH) {
 
 	int scale = std::max(2, outH / 450);
 	int rowH = (splitfont::GLYPH_H + 4) * scale;
-	int labelCol = 18 * splitfont::ADVANCE * scale;
-	int valueCol = 14 * splitfont::ADVANCE * scale;
+	int labelCol = 21 * splitfont::ADVANCE * scale;
+	int valueCol = 24 * splitfont::ADVANCE * scale;
 	int panelW = labelCol + valueCol + 40 * scale;
 	int panelH = ((int)items.size() + 4) * rowH;
 	int px = (outW - panelW) / 2;
@@ -1328,12 +1459,78 @@ static void drawMenu(int outW, int outH) {
 		y += rowH;
 	}
 
-	std::string hint = g_app.editingName
-	    ? "TIPPEN: NAME  ENTER: OK  ESC: ABBRECHEN"
-	    : "PFEILE: WAEHLEN/AENDERN  ENTER: OK  ESC: SCHLIESSEN";
 	int hs = std::max(1, scale - 1);
-	drawText(hint, px + (panelW - textWidth(hint, hs)) / 2, py + panelH - rowH + 2 * scale,
-	         hs, 150, 150, 160);
+	if (!g_app.menuStatus.empty() && SDL_GetTicks64() < g_app.menuStatusUntil) {
+		drawText(g_app.menuStatus, px + (panelW - textWidth(g_app.menuStatus, hs)) / 2,
+		         py + panelH - rowH + 2 * scale, hs, 120, 220, 120);
+	} else {
+		std::string hint = g_app.editingName
+		    ? "TIPPEN: NAME  ENTER: OK  ESC: ABBRECHEN"
+		    : "PFEILE: WAEHLEN/AENDERN  ENTER: OK  ESC: SCHLIESSEN";
+		drawText(hint, px + (panelW - textWidth(hint, hs)) / 2, py + panelH - rowH + 2 * scale,
+		         hs, 150, 150, 160);
+	}
+}
+
+// Seite: Controller den Spielern zuweisen
+static void drawPadAssign(int outW, int outH) {
+	int count = padAssignPlayerCount();
+	int scale = std::max(2, outH / 450);
+	int rowH = (splitfont::GLYPH_H + 5) * scale;
+	int panelW = 52 * splitfont::ADVANCE * scale;
+	int panelH = (count + 6) * rowH;
+	int px = (outW - panelW) / 2;
+	int py = (outH - panelH) / 2;
+
+	fillRect(px, py, panelW, panelH, 10, 10, 14, 240);
+	SDL_SetRenderDrawBlendMode(g_app.renderer, SDL_BLENDMODE_NONE);
+	SDL_SetRenderDrawColor(g_app.renderer, 90, 90, 110, 255);
+	SDL_Rect frame = {px, py, panelW, panelH};
+	SDL_RenderDrawRect(g_app.renderer, &frame);
+
+	std::string title = "CONTROLLER ZUWEISEN";
+	drawText(title, px + (panelW - textWidth(title, scale)) / 2, py + rowH / 2, scale,
+	         120, 200, 255);
+
+	int y = py + rowH * 2;
+	for (int i = 0; i < count; ++i) {
+		bool sel = i == g_app.padAssignSel;
+		uint8_t r = sel ? 255 : 200, g = sel ? 220 : 200, b = sel ? 120 : 205;
+		if (sel) {
+			fillRect(px + 8 * scale, y - 2 * scale, panelW - 16 * scale, rowH, 60, 60, 80, 160);
+			drawText(">", px + 10 * scale, y, scale, 255, 220, 120);
+		}
+		std::string label = "P" + std::to_string(i + 1);
+		if (!g_app.playerName[i].empty()) {
+			label += " " + g_app.playerName[i];
+		}
+		drawText(label, px + 20 * scale, y, scale, r, g, b);
+
+		std::string padName;
+		if (g_players[i].pad) {
+			padName = SDL_GameControllerName(g_players[i].pad);
+			std::transform(padName.begin(), padName.end(), padName.begin(), ::toupper);
+			if (padName.size() > 26) {
+				padName.resize(26);
+			}
+		} else {
+			padName = i == 0 ? "TASTATUR" : "KEIN CONTROLLER";
+		}
+		drawText(padName, px + 20 * scale + 16 * splitfont::ADVANCE * scale, y, scale,
+		         g_players[i].pad ? 120 : r, g_players[i].pad ? 220 : g,
+		         g_players[i].pad ? 120 : b);
+		y += rowH;
+	}
+
+	int hs = std::max(1, scale - 1);
+	std::string hint1 = "PFEILE: SPIELER WAEHLEN";
+	std::string hint2 = "KNOPF AUF DEM CONTROLLER = DIESEM SPIELER ZUWEISEN";
+	std::string hint3 = "ESC/ENTER: FERTIG";
+	drawText(hint1, px + (panelW - textWidth(hint1, hs)) / 2, y + rowH / 2, hs, 150, 150, 160);
+	drawText(hint2, px + (panelW - textWidth(hint2, hs)) / 2, y + rowH / 2 + rowH, hs,
+	         150, 150, 160);
+	drawText(hint3, px + (panelW - textWidth(hint3, hs)) / 2, y + rowH / 2 + rowH * 2, hs,
+	         150, 150, 160);
 }
 
 // ---------------------------------------------------------------------------
@@ -1354,6 +1551,10 @@ static void drawHelp(int outW, int outH) {
 		"CONTROLLER (ALLE SPIELER):",
 		"  A/B WIE BESCHRIFTET, SCHULTERTASTEN L/R,",
 		"  START = START, SELECT/BACK = SELECT",
+		"",
+		"POKEMON TAUSCHEN/KAEMPFEN:",
+		"  SPIELER 1 MUSS IMMER MITMACHEN (BUS-MASTER),",
+		"  TEMPO 1X, BEIDE GLEICHZEITIG IN DEN KABELCLUB",
 		"",
 		"HOTKEYS:",
 		"  ESC MENUE    1-4 TEMPO    TAB TURBO (HALTEN)",
@@ -1399,7 +1600,7 @@ static void drawHelp(int outW, int outH) {
 enum LauncherRow {
 	LR_PLAYERS = 100,
 	LR_P0 = 0, LR_P1, LR_P2, LR_P3,
-	LR_START = 200, LR_CONTROLS, LR_QUIT,
+	LR_START = 200, LR_PADS, LR_CONTROLS, LR_QUIT,
 };
 
 static std::string romDisplayName(const std::string& path) {
@@ -1466,6 +1667,7 @@ static std::vector<int> launcherRows() {
 		}
 		rows.push_back(LR_START);
 	}
+	rows.push_back(LR_PADS);
 	rows.push_back(LR_CONTROLS);
 	rows.push_back(LR_QUIT);
 	return rows;
@@ -1495,7 +1697,10 @@ static int launcherActivate(int row) {
 	if (row == LR_QUIT) {
 		return 2;
 	}
-	if (row == LR_CONTROLS) {
+	if (row == LR_PADS) {
+		g_app.padAssignOpen = true;
+		g_app.padAssignSel = 0;
+	} else if (row == LR_CONTROLS) {
 		g_app.helpOpen = true;
 	} else if (row >= LR_P0 && row <= LR_P3) {
 		g_app.editingName = true;
@@ -1572,6 +1777,8 @@ static void drawLauncher(int outW, int outH) {
 			}
 		} else if (row == LR_START) {
 			drawText("STARTEN", tx, y, scale, r, g, b);
+		} else if (row == LR_PADS) {
+			drawText("CONTROLLER ZUWEISEN", tx, y, scale, r, g, b);
 		} else if (row == LR_CONTROLS) {
 			drawText("STEUERUNG", tx, y, scale, r, g, b);
 		} else if (row == LR_QUIT) {
@@ -1586,6 +1793,9 @@ static void drawLauncher(int outW, int outH) {
 	int hs = std::max(1, scale - 1);
 	drawText(hint, (outW - textWidth(hint, hs)) / 2, outH - rowH * 2, hs, 150, 150, 160);
 
+	if (g_app.padAssignOpen) {
+		drawPadAssign(outW, outH);
+	}
 	if (g_app.helpOpen) {
 		drawHelp(outW, outH);
 	}
@@ -1610,10 +1820,20 @@ static bool runLauncher(std::vector<std::string>* romsOut) {
 
 	// Debug: Startmenue einmal rendern, als BMP sichern, beenden
 	if (const char* shotPath = getenv("SPLITGBA_LAUNCHER_SHOT")) {
+		// angeschlossene Controller noch einholen (Device-Events aus der Queue)
+		SDL_Event ev;
+		while (SDL_PollEvent(&ev)) {
+			if (ev.type == SDL_CONTROLLERDEVICEADDED) {
+				assignController(ev.cdevice.which);
+			}
+		}
 		int outW, outH;
 		SDL_GetRendererOutputSize(g_app.renderer, &outW, &outH);
 		if (getenv("SPLITGBA_LAUNCHER_SHOT_HELP")) {
 			g_app.helpOpen = true;
+		}
+		if (getenv("SPLITGBA_LAUNCHER_SHOT_PADS")) {
+			g_app.padAssignOpen = true;
 		}
 		drawLauncher(outW, outH);
 		saveScreenshotBMP(shotPath);
@@ -1643,6 +1863,14 @@ static bool runLauncher(std::vector<std::string>* romsOut) {
 			if (g_app.helpOpen) {
 				if (ev.type == SDL_KEYDOWN || ev.type == SDL_CONTROLLERBUTTONDOWN) {
 					g_app.helpOpen = false;
+				}
+				continue;
+			}
+			if (g_app.padAssignOpen) {
+				if (ev.type == SDL_KEYDOWN) {
+					padAssignHandleKey(ev.key);
+				} else if (ev.type == SDL_CONTROLLERBUTTONDOWN) {
+					padAssignHandleButton(ev.cbutton.which);
 				}
 				continue;
 			}
@@ -1786,6 +2014,9 @@ static void renderFrame(int outW, int outH) {
 
 	if (g_app.menuOpen) {
 		drawMenu(outW, outH);
+	}
+	if (g_app.padAssignOpen) {
+		drawPadAssign(outW, outH);
 	}
 	if (g_app.helpOpen) {
 		drawHelp(outW, outH);
@@ -2226,6 +2457,8 @@ int main(int argc, char** argv) {
 			case SDL_KEYDOWN:
 				if (g_app.helpOpen) {
 					g_app.helpOpen = false;
+				} else if (g_app.padAssignOpen) {
+					padAssignHandleKey(ev.key);
 				} else if (g_app.menuOpen) {
 					menuHandleKey(ev.key, &quit);
 				} else {
@@ -2233,7 +2466,7 @@ int main(int argc, char** argv) {
 				}
 				break;
 			case SDL_KEYUP:
-				if (!g_app.menuOpen && !g_app.helpOpen) {
+				if (!g_app.menuOpen && !g_app.helpOpen && !g_app.padAssignOpen) {
 					handleKeyUp(ev.key);
 				}
 				break;
@@ -2243,6 +2476,8 @@ int main(int argc, char** argv) {
 			case SDL_CONTROLLERBUTTONDOWN:
 				if (g_app.helpOpen) {
 					g_app.helpOpen = false;
+				} else if (g_app.padAssignOpen) {
+					padAssignHandleButton(ev.cbutton.which);
 				} else if (g_app.menuOpen) {
 					menuHandlePad(ev.cbutton, &quit);
 				}

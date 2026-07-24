@@ -171,8 +171,17 @@ on real hardware. The usual cartridge rules apply: Gen III games
 (Ruby/Sapphire/Emerald/FireRed/LeafGreen) link with each other;
 FireRed/LeafGreen need the National Dex before trading with Ruby/Sapphire.
 
+**The one rule that matters: player 1 must take part in every trade or
+battle.** In GBA multiplayer mode only player 1 (top-left panel) clocks
+the bus — exactly like the "parent" unit on a real link cable. If, say,
+players 2 and 3 enter the Cable Club while player 1 stays outside, no
+connection can be established. The HUD and the link row in the settings
+menu show live who is in link mode and warn when player 1 is missing.
+
 Practical tips:
 
+- Cleanest trade setup: launch just the two participants (player 1 +
+  partner), trade, then relaunch with four players.
 - Drop to **1x speed** for trades and battles — most stable.
 - Don't load savestates in the middle of a link transfer. If a link ever
   gets stuck, `Shift`+`R` resets all games cleanly.
