@@ -1342,12 +1342,10 @@ static void renderFrame(int outW, int outH) {
 		}
 	}
 
-	if (!g_app.hudVisible) {
-		return;
-	}
-
 	std::string hud = hudLine();
-	if (lay.hasHudCell && g_app.timerMode.load() != 0) {
+	if (!g_app.hudVisible) {
+		// HUD aus: Timer/Statuszeile weglassen — Menue und Pause unten trotzdem zeichnen
+	} else if (lay.hasHudCell && g_app.timerMode.load() != 0) {
 		// 3 Spieler: die freie Kachel wird zur grossen Anzeige
 		int timerScale = std::max(2, lay.hudCell.w / (8 * splitfont::ADVANCE));
 		std::string timer = formatTimer(displayTimerMs());
