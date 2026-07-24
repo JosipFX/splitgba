@@ -32,6 +32,16 @@ Bibliothek mitgebaut. Ergebnis: `./build/splitgba`
 
 ## Starten
 
+**Am einfachsten ohne Argumente** — dann öffnet sich das Startmenü:
+ROM pro Spieler wählen (aus dem `roms/`-Ordner), Spielerzahl 1–4 festlegen,
+Namen eintragen, „Starten". Die Auswahl wird fürs nächste Mal gemerkt.
+
+```bash
+./build/splitgba
+```
+
+Oder direkt per Kommandozeile:
+
 ```bash
 # 4 verschiedene Editionen (z.B. zum Tauschen):
 ./build/splitgba -f feuerrot.gba blattgruen.gba rubin.gba smaragd.gba
@@ -70,6 +80,7 @@ Tastatur **oder** Controller (D-Pad + A/B):
 - **Timer**: Aus / Stoppuhr / **Countdown** mit einstellbarer Dauer
   (1–120 min; bei 0 stoppt er automatisch und zeigt „ZEIT!")
 - Tempo, HUD, Glättung, Vollbild, Beenden
+- **Steuerung anzeigen**: Übersicht aller Tasten- und Controller-Belegungen
 
 Alle Einstellungen werden in `~/.config/splitgba.ini` gespeichert und beim
 nächsten Start automatisch geladen.

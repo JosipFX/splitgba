@@ -64,6 +64,16 @@ Result: `./build/splitgba`
 
 ## Usage
 
+**Easiest: run without arguments** — a launcher screen opens where you pick
+a ROM per player (from the `roms/` directory), set the player count (1–4)
+and enter names. The selection is remembered for next time.
+
+```bash
+./build/splitgba
+```
+
+Or directly from the command line:
+
 ```bash
 # Four different cartridges (e.g. for trading between versions):
 ./build/splitgba -f firered.gba leafgreen.gba ruby.gba emerald.gba
@@ -96,6 +106,7 @@ keyboard **or** any controller (d-pad + A/B):
 - **Timer modes**: off / stopwatch / **countdown** with configurable
   duration (1–120 min; it stops at zero and shows "ZEIT!")
 - Speed, HUD, smoothing, fullscreen, quit
+- **Controls overview**: every keyboard and controller binding on one page
 
 All settings persist in `~/.config/splitgba.ini`.
 

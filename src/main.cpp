@@ -120,6 +120,15 @@ struct App {
 	std::string editBuffer;
 	bool pausedBeforeMenu = false;
 
+	// Steuerungs-Uebersicht & Startmenue
+	bool helpOpen = false;
+	int launcherPlayers = 4;
+	int launcherSel = 0;
+	int launcherRom[MAX_PLAYERS] = {0, 0, 0, 0};
+	std::vector<std::string> romList;
+	int savedPlayers = 0;
+	std::string savedRomPath[MAX_PLAYERS];
+
 	bool hudVisible = true;
 	bool fullscreen = false;
 	bool smooth = false;
@@ -715,13 +724,15 @@ static void assignController(int deviceIndex) {
 		return;
 	}
 	SDL_JoystickID id = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(pad));
-	for (int i = 0; i < g_app.numPlayers; ++i) {
+	// Slots unabhaengig von der Spielerzahl belegen, damit Controller auch im
+	// Startmenue schon funktionieren
+	for (int i = 0; i < MAX_PLAYERS; ++i) {
 		if (g_players[i].padId == id && g_players[i].pad) {
 			SDL_GameControllerClose(pad);
 			return;  // schon zugeordnet
 		}
 	}
-	for (int i = 0; i < g_app.numPlayers; ++i) {
+	for (int i = 0; i < MAX_PLAYERS; ++i) {
 		if (!g_players[i].pad) {
 			g_players[i].pad = pad;
 			g_players[i].padId = id;
@@ -733,7 +744,7 @@ static void assignController(int deviceIndex) {
 }
 
 static void removeController(SDL_JoystickID id) {
-	for (int i = 0; i < g_app.numPlayers; ++i) {
+	for (int i = 0; i < MAX_PLAYERS; ++i) {
 		if (g_players[i].padId == id) {
 			if (g_players[i].pad) {
 				SDL_GameControllerClose(g_players[i].pad);
@@ -827,6 +838,13 @@ static void loadSettings() {
 			g_app.smooth = atoi(val.c_str()) != 0;
 		} else if (key == "mute") {
 			g_app.masterMute.store(atoi(val.c_str()) != 0);
+		} else if (key == "players") {
+			g_app.savedPlayers = std::clamp(atoi(val.c_str()), 0, MAX_PLAYERS);
+		}
+		for (int i = 0; i < MAX_PLAYERS; ++i) {
+			if (key == "rom" + std::to_string(i + 1)) {
+				g_app.savedRomPath[i] = val;
+			}
 		}
 	}
 	fclose(f);
@@ -840,6 +858,10 @@ static void saveSettings() {
 	for (int i = 0; i < MAX_PLAYERS; ++i) {
 		fprintf(f, "name%d=%s\n", i + 1, g_app.playerName[i].c_str());
 		fprintf(f, "vol%d=%d\n", i + 1, g_app.playerVol[i].load());
+	}
+	fprintf(f, "players=%d\n", g_app.savedPlayers);
+	for (int i = 0; i < MAX_PLAYERS; ++i) {
+		fprintf(f, "rom%d=%s\n", i + 1, g_app.savedRomPath[i].c_str());
 	}
 	fprintf(f, "speed=%d\n", g_app.speedIdx.load() + 1);
 	fprintf(f, "timer=%d\n", g_app.timerMode.load());
@@ -858,7 +880,7 @@ enum MenuId {
 	MI_VOL0, MI_VOL1, MI_VOL2, MI_VOL3,
 	MI_SPEED, MI_TIMERMODE, MI_COUNTDOWN,
 	MI_MUTE, MI_HUD, MI_SMOOTH, MI_FULLSCREEN,
-	MI_CLOSE, MI_QUIT,
+	MI_CONTROLS, MI_CLOSE, MI_QUIT,
 };
 
 static const int COUNTDOWN_STEPS[] = {1, 2, 3, 5, 10, 15, 20, 30, 45, 60, 90, 120};
@@ -880,6 +902,7 @@ static std::vector<int> menuItems() {
 	items.push_back(MI_HUD);
 	items.push_back(MI_SMOOTH);
 	items.push_back(MI_FULLSCREEN);
+	items.push_back(MI_CONTROLS);
 	items.push_back(MI_CLOSE);
 	items.push_back(MI_QUIT);
 	return items;
@@ -963,6 +986,8 @@ static void menuActivate(int id, bool* quit) {
 		g_app.editingIndex = id - MI_NAME0;
 		g_app.editBuffer = g_app.playerName[g_app.editingIndex];
 		SDL_StartTextInput();
+	} else if (id == MI_CONTROLS) {
+		g_app.helpOpen = true;
 	} else if (id == MI_CLOSE) {
 		menuClose();
 	} else if (id == MI_QUIT) {
@@ -1242,6 +1267,9 @@ static void menuItemText(int id, std::string& label, std::string& value) {
 	} else if (id == MI_FULLSCREEN) {
 		label = "VOLLBILD";
 		value = g_app.fullscreen ? "AN" : "AUS";
+	} else if (id == MI_CONTROLS) {
+		label = "STEUERUNG ANZEIGEN";
+		value = "";
 	} else if (id == MI_CLOSE) {
 		label = "SCHLIESSEN";
 		value = "";
@@ -1299,6 +1327,367 @@ static void drawMenu(int outW, int outH) {
 	int hs = std::max(1, scale - 1);
 	drawText(hint, px + (panelW - textWidth(hint, hs)) / 2, py + panelH - rowH + 2 * scale,
 	         hs, 150, 150, 160);
+}
+
+// ---------------------------------------------------------------------------
+// Steuerungs-Uebersicht (aus Menue und Startmenue aufrufbar)
+
+static void drawHelp(int outW, int outH) {
+	static const char* LINES[] = {
+		"STEUERUNG",
+		"",
+		"SPIELER 1 - TASTATUR:",
+		"  PFEILTASTEN   STEUERKREUZ",
+		"  X             A-KNOPF",
+		"  Z ODER Y      B-KNOPF",
+		"  A / S         L / R",
+		"  ENTER         START",
+		"  BACKSPACE     SELECT",
+		"",
+		"CONTROLLER (ALLE SPIELER):",
+		"  A/B WIE BESCHRIFTET, SCHULTERTASTEN L/R,",
+		"  START = START, SELECT/BACK = SELECT",
+		"",
+		"HOTKEYS:",
+		"  ESC MENUE    1-4 TEMPO    TAB TURBO (HALTEN)",
+		"  LEERTASTE TIMER    R TIMER-RESET",
+		"  SHIFT+R RACE-START    P PAUSE    M STUMM",
+		"  F VOLLBILD    H HUD    F5/F9 SAVESTATE",
+		"",
+		"BELIEBIGE TASTE SCHLIESST DIESE ANSICHT",
+	};
+	int count = (int)(sizeof(LINES) / sizeof(LINES[0]));
+	int scale = std::max(2, outH / 500);
+	int rowH = (splitfont::GLYPH_H + 4) * scale;
+	int panelW = 48 * splitfont::ADVANCE * scale;
+	int panelH = (count + 2) * rowH;
+	int px = (outW - panelW) / 2;
+	int py = (outH - panelH) / 2;
+
+	fillRect(px, py, panelW, panelH, 10, 10, 14, 240);
+	SDL_SetRenderDrawBlendMode(g_app.renderer, SDL_BLENDMODE_NONE);
+	SDL_SetRenderDrawColor(g_app.renderer, 90, 90, 110, 255);
+	SDL_Rect frame = {px, py, panelW, panelH};
+	SDL_RenderDrawRect(g_app.renderer, &frame);
+
+	int y = py + rowH;
+	for (int i = 0; i < count; ++i) {
+		std::string line = LINES[i];
+		bool isTitle = i == 0;
+		bool isHeader = !line.empty() && line[0] != ' ' && !isTitle;
+		if (isTitle) {
+			drawText(line, px + (panelW - textWidth(line, scale)) / 2, y, scale, 120, 200, 255);
+		} else if (isHeader) {
+			drawText(line, px + 3 * splitfont::ADVANCE * scale, y, scale, 255, 220, 120);
+		} else {
+			drawText(line, px + 3 * splitfont::ADVANCE * scale, y, scale, 210, 210, 215);
+		}
+		y += rowH;
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Startmenue: ROM-Auswahl, Spielerzahl, Namen
+
+enum LauncherRow {
+	LR_PLAYERS = 100,
+	LR_P0 = 0, LR_P1, LR_P2, LR_P3,
+	LR_START = 200, LR_CONTROLS, LR_QUIT,
+};
+
+static std::string romDisplayName(const std::string& path) {
+	std::string n = baseName(stripExtension(path));
+	std::transform(n.begin(), n.end(), n.begin(), ::toupper);
+	if (n.size() > 18) {
+		n.resize(18);
+	}
+	return n;
+}
+
+static void scanRoms() {
+	g_app.romList.clear();
+	const char* dirs[] = {"roms", "roms-test", "."};
+	for (const char* dirname : dirs) {
+		DIR* d = opendir(dirname);
+		if (!d) {
+			continue;
+		}
+		std::vector<std::string> found;
+		while (struct dirent* e = readdir(d)) {
+			std::string name = e->d_name;
+			if (name.size() > 4 && name.substr(name.size() - 4) == ".gba") {
+				found.push_back(std::string(dirname) == "." ? name
+				                                           : std::string(dirname) + "/" + name);
+			}
+		}
+		closedir(d);
+		std::sort(found.begin(), found.end());
+		for (const auto& f : found) {
+			g_app.romList.push_back(f);
+		}
+	}
+	// Zuletzt benutzte Auswahl wiederherstellen
+	if (g_app.savedPlayers > 0) {
+		g_app.launcherPlayers = g_app.savedPlayers;
+	}
+	for (int i = 0; i < MAX_PLAYERS; ++i) {
+		for (int r = 0; r < (int)g_app.romList.size(); ++r) {
+			if (g_app.romList[r] == g_app.savedRomPath[i]) {
+				g_app.launcherRom[i] = r;
+			}
+		}
+	}
+}
+
+static std::vector<int> launcherRows() {
+	std::vector<int> rows;
+	if (!g_app.romList.empty()) {
+		rows.push_back(LR_PLAYERS);
+		for (int i = 0; i < g_app.launcherPlayers; ++i) {
+			rows.push_back(LR_P0 + i);
+		}
+		rows.push_back(LR_START);
+	}
+	rows.push_back(LR_CONTROLS);
+	rows.push_back(LR_QUIT);
+	return rows;
+}
+
+static void launcherNav(int dir) {
+	std::vector<int> rows = launcherRows();
+	g_app.launcherSel = ((g_app.launcherSel + dir) % (int)rows.size() + (int)rows.size()) %
+	                    (int)rows.size();
+}
+
+static void launcherAdjust(int row, int dir) {
+	if (row == LR_PLAYERS) {
+		g_app.launcherPlayers = std::clamp(g_app.launcherPlayers + dir, 1, MAX_PLAYERS);
+	} else if (row >= LR_P0 && row <= LR_P3) {
+		int i = row - LR_P0;
+		int n = (int)g_app.romList.size();
+		g_app.launcherRom[i] = ((g_app.launcherRom[i] + dir) % n + n) % n;
+	}
+}
+
+// Rueckgabe: 0 = weiter im Menue, 1 = starten, 2 = beenden
+static int launcherActivate(int row) {
+	if (row == LR_START) {
+		return 1;
+	}
+	if (row == LR_QUIT) {
+		return 2;
+	}
+	if (row == LR_CONTROLS) {
+		g_app.helpOpen = true;
+	} else if (row >= LR_P0 && row <= LR_P3) {
+		g_app.editingName = true;
+		g_app.editingIndex = row - LR_P0;
+		g_app.editBuffer = g_app.playerName[g_app.editingIndex];
+		SDL_StartTextInput();
+	} else if (row == LR_PLAYERS) {
+		launcherAdjust(row, +1);
+	}
+	return 0;
+}
+
+static void drawLauncher(int outW, int outH) {
+	SDL_SetRenderDrawBlendMode(g_app.renderer, SDL_BLENDMODE_NONE);
+	SDL_SetRenderDrawColor(g_app.renderer, 16, 16, 20, 255);
+	SDL_RenderClear(g_app.renderer);
+
+	int titleScale = std::max(4, outH / 120);
+	std::string title = "SPLITGBA";
+	drawText(title, (outW - textWidth(title, titleScale)) / 2, outH / 12, titleScale,
+	         120, 200, 255);
+	std::string sub = "4-SPIELER SPLITSCREEN + LINK-KABEL";
+	int subScale = std::max(1, titleScale / 4);
+	drawText(sub, (outW - textWidth(sub, subScale)) / 2,
+	         outH / 12 + (splitfont::GLYPH_H + 4) * titleScale, subScale, 150, 150, 160);
+
+	std::vector<int> rows = launcherRows();
+	if (g_app.launcherSel >= (int)rows.size()) {
+		g_app.launcherSel = 0;
+	}
+
+	int scale = std::max(2, outH / 400);
+	int rowH = (splitfont::GLYPH_H + 5) * scale;
+	int panelW = 52 * splitfont::ADVANCE * scale;
+	int px = (outW - panelW) / 2;
+	int y = outH / 3;
+
+	if (g_app.romList.empty()) {
+		std::string msg = "KEINE ROMS GEFUNDEN";
+		drawText(msg, (outW - textWidth(msg, scale)) / 2, y, scale, 255, 120, 120);
+		std::string msg2 = "LEGE .GBA-DATEIEN IN DEN ORDNER roms/";
+		drawText(msg2, (outW - textWidth(msg2, scale)) / 2, y + rowH, scale, 210, 210, 215);
+		y += rowH * 3;
+	}
+
+	for (int n = 0; n < (int)rows.size(); ++n) {
+		int row = rows[n];
+		bool sel = n == g_app.launcherSel;
+		uint8_t r = sel ? 255 : 200, g = sel ? 220 : 200, b = sel ? 120 : 205;
+		if (sel) {
+			fillRect(px, y - 2 * scale, panelW, rowH, 60, 60, 80, 160);
+			drawText(">", px + 2 * scale, y, scale, 255, 220, 120);
+		}
+		int tx = px + 4 * splitfont::ADVANCE * scale;
+		if (row == LR_PLAYERS) {
+			drawText("SPIELER", tx, y, scale, r, g, b);
+			std::string v = "< " + std::to_string(g_app.launcherPlayers) + " >";
+			drawText(v, tx + 20 * splitfont::ADVANCE * scale, y, scale, r, g, b);
+		} else if (row >= LR_P0 && row <= LR_P3) {
+			int i = row - LR_P0;
+			drawText("P" + std::to_string(i + 1), tx, y, scale, r, g, b);
+			std::string rom = "< " + romDisplayName(g_app.romList[g_app.launcherRom[i]]) + " >";
+			drawText(rom, tx + 4 * splitfont::ADVANCE * scale, y, scale, r, g, b);
+			std::string name;
+			if (g_app.editingName && g_app.editingIndex == i) {
+				name = g_app.editBuffer + ((SDL_GetTicks64() / 400) % 2 ? "_" : " ");
+			} else {
+				name = g_app.playerName[i].empty() ? "---" : g_app.playerName[i];
+			}
+			drawText(name, tx + 27 * splitfont::ADVANCE * scale, y, scale, r, g, b);
+			if (g_players[i].pad) {
+				drawText("PAD OK", tx + 40 * splitfont::ADVANCE * scale, y, scale, 120, 200, 120);
+			}
+		} else if (row == LR_START) {
+			drawText("STARTEN", tx, y, scale, r, g, b);
+		} else if (row == LR_CONTROLS) {
+			drawText("STEUERUNG", tx, y, scale, r, g, b);
+		} else if (row == LR_QUIT) {
+			drawText("BEENDEN", tx, y, scale, r, g, b);
+		}
+		y += rowH;
+	}
+
+	std::string hint = g_app.editingName
+	    ? "TIPPEN: NAME  ENTER: OK  ESC: ABBRECHEN"
+	    : "PFEILE: WAEHLEN/AENDERN  ENTER: OK/NAME  START-KNOPF: LOSLEGEN";
+	int hs = std::max(1, scale - 1);
+	drawText(hint, (outW - textWidth(hint, hs)) / 2, outH - rowH * 2, hs, 150, 150, 160);
+
+	if (g_app.helpOpen) {
+		drawHelp(outW, outH);
+	}
+}
+
+static void saveScreenshotBMP(const char* path) {
+	int outW, outH;
+	SDL_GetRendererOutputSize(g_app.renderer, &outW, &outH);
+	SDL_Surface* shot =
+	    SDL_CreateRGBSurfaceWithFormat(0, outW, outH, 24, SDL_PIXELFORMAT_RGB24);
+	SDL_RenderReadPixels(g_app.renderer, nullptr, SDL_PIXELFORMAT_RGB24, shot->pixels,
+	                     shot->pitch);
+	if (SDL_SaveBMP(shot, path) != 0) {
+		fprintf(stderr, "Screenshot fehlgeschlagen: %s\n", SDL_GetError());
+	}
+	SDL_FreeSurface(shot);
+}
+
+// Startmenue-Schleife. Rueckgabe false = Benutzer will beenden.
+static bool runLauncher(std::vector<std::string>* romsOut) {
+	scanRoms();
+
+	// Debug: Startmenue einmal rendern, als BMP sichern, beenden
+	if (const char* shotPath = getenv("SPLITGBA_LAUNCHER_SHOT")) {
+		int outW, outH;
+		SDL_GetRendererOutputSize(g_app.renderer, &outW, &outH);
+		if (getenv("SPLITGBA_LAUNCHER_SHOT_HELP")) {
+			g_app.helpOpen = true;
+		}
+		drawLauncher(outW, outH);
+		saveScreenshotBMP(shotPath);
+		printf("Startmenue-Screenshot: %s\n", shotPath);
+		return false;
+	}
+
+	bool done = false;
+	while (!done) {
+		SDL_Event ev;
+		while (SDL_PollEvent(&ev)) {
+			if (ev.type == SDL_QUIT) {
+				return false;
+			}
+			if (ev.type == SDL_CONTROLLERDEVICEADDED) {
+				assignController(ev.cdevice.which);
+				continue;
+			}
+			if (ev.type == SDL_CONTROLLERDEVICEREMOVED) {
+				removeController(ev.cdevice.which);
+				continue;
+			}
+			if (ev.type == SDL_TEXTINPUT) {
+				menuHandleText(ev.text);
+				continue;
+			}
+			if (g_app.helpOpen) {
+				if (ev.type == SDL_KEYDOWN || ev.type == SDL_CONTROLLERBUTTONDOWN) {
+					g_app.helpOpen = false;
+				}
+				continue;
+			}
+			if (g_app.editingName && ev.type == SDL_KEYDOWN) {
+				SDL_Keycode key = ev.key.keysym.sym;
+				if (key == SDLK_RETURN || key == SDLK_KP_ENTER) {
+					g_app.playerName[g_app.editingIndex] = g_app.editBuffer;
+					g_app.editingName = false;
+					SDL_StopTextInput();
+				} else if (key == SDLK_ESCAPE) {
+					g_app.editingName = false;
+					SDL_StopTextInput();
+				} else if (key == SDLK_BACKSPACE && !g_app.editBuffer.empty()) {
+					g_app.editBuffer.pop_back();
+				}
+				continue;
+			}
+			int action = 0;
+			std::vector<int> rows = launcherRows();
+			int row = rows[std::min(g_app.launcherSel, (int)rows.size() - 1)];
+			if (ev.type == SDL_KEYDOWN) {
+				switch (ev.key.keysym.sym) {
+				case SDLK_UP: launcherNav(-1); break;
+				case SDLK_DOWN: launcherNav(+1); break;
+				case SDLK_LEFT: launcherAdjust(row, -1); break;
+				case SDLK_RIGHT: launcherAdjust(row, +1); break;
+				case SDLK_RETURN:
+				case SDLK_KP_ENTER: action = launcherActivate(row); break;
+				case SDLK_ESCAPE: action = 2; break;
+				case SDLK_f: toggleFullscreen(); break;
+				default: break;
+				}
+			} else if (ev.type == SDL_CONTROLLERBUTTONDOWN) {
+				switch (ev.cbutton.button) {
+				case SDL_CONTROLLER_BUTTON_DPAD_UP: launcherNav(-1); break;
+				case SDL_CONTROLLER_BUTTON_DPAD_DOWN: launcherNav(+1); break;
+				case SDL_CONTROLLER_BUTTON_DPAD_LEFT: launcherAdjust(row, -1); break;
+				case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: launcherAdjust(row, +1); break;
+				case SDL_CONTROLLER_BUTTON_A: action = launcherActivate(row); break;
+				case SDL_CONTROLLER_BUTTON_START:
+					action = g_app.romList.empty() ? 0 : 1;
+					break;
+				default: break;
+				}
+			}
+			if (action == 1) {
+				done = true;
+			} else if (action == 2) {
+				return false;
+			}
+		}
+
+		int outW, outH;
+		SDL_GetRendererOutputSize(g_app.renderer, &outW, &outH);
+		drawLauncher(outW, outH);
+		SDL_RenderPresent(g_app.renderer);
+		SDL_Delay(10);
+	}
+
+	romsOut->clear();
+	for (int i = 0; i < g_app.launcherPlayers; ++i) {
+		romsOut->push_back(g_app.romList[g_app.launcherRom[i]]);
+	}
+	return true;
 }
 
 static void renderFrame(int outW, int outH) {
@@ -1378,6 +1767,9 @@ static void renderFrame(int outW, int outH) {
 
 	if (g_app.menuOpen) {
 		drawMenu(outW, outH);
+	}
+	if (g_app.helpOpen) {
+		drawHelp(outW, outH);
 	}
 }
 
@@ -1627,9 +2019,13 @@ int main(int argc, char** argv) {
 	if (args.listPads) {
 		return listPads();
 	}
-	if (args.showHelp || args.roms.empty()) {
+	if (args.showHelp) {
 		usage(argv[0]);
-		return args.showHelp ? 0 : 1;
+		return 0;
+	}
+	if (args.roms.empty() && !args.screenshotPath.empty()) {
+		usage(argv[0]);  // der Screenshot-Testmodus braucht ROM-Pfade
+		return 1;
 	}
 
 	s_logger.log = quietLog;
@@ -1661,8 +2057,9 @@ int main(int argc, char** argv) {
 	// Community-Mappings laden, falls vorhanden (mehr Controller-Modelle)
 	SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
 
+	bool hiddenUi = screenshotMode || getenv("SPLITGBA_LAUNCHER_SHOT") != nullptr;
 	uint32_t winFlags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
-	if (screenshotMode) {
+	if (hiddenUi) {
 		winFlags |= SDL_WINDOW_HIDDEN;
 	} else if (args.fullscreen) {
 		winFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
@@ -1675,7 +2072,7 @@ int main(int argc, char** argv) {
 	}
 	g_app.renderer = SDL_CreateRenderer(
 	    g_app.window, -1,
-	    screenshotMode ? SDL_RENDERER_SOFTWARE : (SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC));
+	    hiddenUi ? SDL_RENDERER_SOFTWARE : (SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC));
 	if (!g_app.renderer) {
 		g_app.renderer = SDL_CreateRenderer(g_app.window, -1, 0);
 	}
@@ -1687,6 +2084,17 @@ int main(int argc, char** argv) {
 		SDL_ShowCursor(SDL_DISABLE);
 	}
 	g_app.fontTex = buildFontTexture(g_app.renderer);
+
+	// Ohne ROM-Argumente: Startmenue (ROM-Auswahl, Spielerzahl, Namen)
+	if (args.roms.empty()) {
+		if (!runLauncher(&args.roms)) {
+			saveSettings();
+			SDL_DestroyRenderer(g_app.renderer);
+			SDL_DestroyWindow(g_app.window);
+			SDL_Quit();
+			return 0;
+		}
+	}
 
 	// Audio oeffnen, bevor die Cores starten (der Callback gibt den Takt vor)
 	if (!screenshotMode) {
@@ -1708,6 +2116,10 @@ int main(int argc, char** argv) {
 
 	// Doppelte ROM-Pfade erkennen: jeder Spieler bekommt eigenen Spielstand
 	g_app.numPlayers = (int)args.roms.size();
+	g_app.savedPlayers = g_app.numPlayers;  // fuers Startmenue beim naechsten Mal
+	for (int i = 0; i < g_app.numPlayers; ++i) {
+		g_app.savedRomPath[i] = args.roms[i];
+	}
 	for (int i = 0; i < g_app.numPlayers; ++i) {
 		bool dup = false;
 		for (int j = 0; j < g_app.numPlayers; ++j) {
@@ -1775,14 +2187,7 @@ int main(int argc, char** argv) {
 		int outW, outH;
 		SDL_GetRendererOutputSize(g_app.renderer, &outW, &outH);
 		renderFrame(outW, outH);
-		SDL_Surface* shot = SDL_CreateRGBSurfaceWithFormat(0, outW, outH, 24,
-		                                                   SDL_PIXELFORMAT_RGB24);
-		SDL_RenderReadPixels(g_app.renderer, nullptr, SDL_PIXELFORMAT_RGB24,
-		                     shot->pixels, shot->pitch);
-		if (SDL_SaveBMP(shot, args.screenshotPath.c_str()) != 0) {
-			fprintf(stderr, "Screenshot fehlgeschlagen: %s\n", SDL_GetError());
-		}
-		SDL_FreeSurface(shot);
+		saveScreenshotBMP(args.screenshotPath.c_str());
 		printf("Screenshot nach %d Frames: %s\n", args.screenshotFrames,
 		       args.screenshotPath.c_str());
 		continueAll();
@@ -1805,14 +2210,16 @@ int main(int argc, char** argv) {
 				quit = true;
 				break;
 			case SDL_KEYDOWN:
-				if (g_app.menuOpen) {
+				if (g_app.helpOpen) {
+					g_app.helpOpen = false;
+				} else if (g_app.menuOpen) {
 					menuHandleKey(ev.key, &quit);
 				} else {
 					handleKeyDown(ev.key, quit);
 				}
 				break;
 			case SDL_KEYUP:
-				if (!g_app.menuOpen) {
+				if (!g_app.menuOpen && !g_app.helpOpen) {
 					handleKeyUp(ev.key);
 				}
 				break;
@@ -1820,7 +2227,9 @@ int main(int argc, char** argv) {
 				menuHandleText(ev.text);
 				break;
 			case SDL_CONTROLLERBUTTONDOWN:
-				if (g_app.menuOpen) {
+				if (g_app.helpOpen) {
+					g_app.helpOpen = false;
+				} else if (g_app.menuOpen) {
 					menuHandlePad(ev.cbutton, &quit);
 				}
 				break;
