@@ -1,0 +1,9 @@
+build/
+roms/
+roms-test/
+*.gba
+*.sav
+*.ss1
+*.bmp
+.DS_Store
+gamecontrollerdb.txt
