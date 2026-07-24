@@ -968,6 +968,7 @@ struct Args {
 	bool mute = false;
 	int copies = 1;
 	int speed = 1;
+	bool listPads = false;
 	int exitAfterSec = 0;  // Debug: nach N Sekunden automatisch beenden
 	std::string screenshotPath;
 	int screenshotFrames = 240;
@@ -986,6 +987,7 @@ static void usage(const char* argv0) {
 	printf("      --mute         ohne Ton starten\n");
 	printf("  -n <1-4>           ROM mehrfach starten (eigener Spielstand pro Spieler)\n");
 	printf("      --speed <1-4>  Start-Tempo (Standard 1)\n");
+	printf("      --list-pads    erkannte Controller anzeigen und beenden\n");
 	printf("      --screenshot <datei.bmp> [--frames N]   Debug: rendern und beenden\n");
 	printf("  -h, --help         diese Hilfe\n\n");
 	printf("Tasten: 1-4/F1-F4 Tempo, Tab Turbo, Leertaste Timer, R Timer-Reset,\n");
@@ -1029,6 +1031,8 @@ static bool parseArgs(int argc, char** argv, Args& args) {
 			args.mute = true;
 		} else if (a == "-n" && i + 1 < argc) {
 			args.copies = std::clamp(atoi(argv[++i]), 1, MAX_PLAYERS);
+		} else if (a == "--list-pads") {
+			args.listPads = true;
 		} else if (a == "--speed" && i + 1 < argc) {
 			args.speed = std::clamp(atoi(argv[++i]), 1, 4);
 		} else if (a == "--exit-after" && i + 1 < argc) {
@@ -1164,9 +1168,46 @@ static void handleKeyUp(const SDL_KeyboardEvent& ev) {
 	}
 }
 
+static int listPads() {
+	if (SDL_Init(SDL_INIT_GAMECONTROLLER) < 0) {
+		fprintf(stderr, "SDL-Init fehlgeschlagen: %s\n", SDL_GetError());
+		return 1;
+	}
+	SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
+	int n = SDL_NumJoysticks();
+	printf("%d Controller gefunden:\n", n);
+	for (int i = 0; i < n; ++i) {
+		if (SDL_IsGameController(i)) {
+			SDL_GameController* gc = SDL_GameControllerOpen(i);
+			printf("  Spieler %d: %s — OK\n", i + 1,
+			       gc ? SDL_GameControllerName(gc) : SDL_JoystickNameForIndex(i));
+			if (gc) {
+				SDL_GameControllerClose(gc);
+			}
+		} else {
+			printf("  [%d] %s — kein Mapping! (gamecontrollerdb.txt ins "
+			       "Startverzeichnis legen)\n",
+			       i + 1, SDL_JoystickNameForIndex(i));
+		}
+	}
+	if (n == 0) {
+		printf("  (Controller per USB anschliessen oder via Bluetooth koppeln,\n"
+		       "   dann erneut ausfuehren)\n");
+	}
+	SDL_Quit();
+	return 0;
+}
+
 int main(int argc, char** argv) {
 	Args args;
-	if (!parseArgs(argc, argv, args) || args.showHelp || args.roms.empty()) {
+	if (!parseArgs(argc, argv, args)) {
+		usage(argv[0]);
+		return 1;
+	}
+	if (args.listPads) {
+		return listPads();
+	}
+	if (args.showHelp || args.roms.empty()) {
 		usage(argv[0]);
 		return args.showHelp ? 0 : 1;
 	}
@@ -1186,6 +1227,8 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, args.smooth ? "1" : "0");
+	// Controller weiterbedienen, auch wenn das Fenster kurz den Fokus verliert
+	SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
 
 	// Community-Mappings laden, falls vorhanden (mehr Controller-Modelle)
 	SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");

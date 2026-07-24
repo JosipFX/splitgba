@@ -116,6 +116,13 @@ If a `gamecontrollerdb.txt`
 ([SDL community database](https://github.com/mdqinc/SDL_GameControllerDB))
 is present in the working directory it is loaded automatically.
 
+Nintendo Switch Pro Controllers are supported natively through SDL's HIDAPI
+driver, over USB-C or Bluetooth, no extra files needed. Button labels are
+respected: the button labeled **A acts as GBA A**. Run
+`./build/splitgba --list-pads` to quickly check that all controllers are
+detected, and `./build/splitgba roms-test/` for a full input test — each
+panel flashes white while a button is held on its controller.
+
 ### Trading and battling (Pokémon)
 
 The link cable is always connected unless you pass `--no-link`. In-game,

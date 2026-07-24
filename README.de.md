@@ -94,6 +94,25 @@ Liegt eine `gamecontrollerdb.txt`
 ([SDL-Community-Datenbank](https://github.com/mdqinc/SDL_GameControllerDB))
 im Startverzeichnis, wird sie automatisch geladen (für exotische Controller).
 
+### Nintendo Switch Pro Controller
+
+Wird nativ unterstützt (SDL-HIDAPI-Treiber), per USB-C-Kabel **oder**
+Bluetooth — keine Zusatzdatei nötig. Bluetooth-Kopplung am Mac: kleinen
+Sync-Knopf oben am Controller gedrückt halten, bis die LEDs lauflichtern,
+dann in *Systemeinstellungen → Bluetooth* verbinden. Die Tastenbeschriftung
+zählt: die mit **A beschriftete Taste ist GBA-A** (Bestätigen), B ist B —
+fühlt sich also genau wie am GBA an.
+
+Schnelltest, ob alle Controller erkannt sind:
+
+```bash
+./build/splitgba --list-pads
+```
+
+Kompletter Probelauf ohne echte Spiele: `./build/splitgba roms-test/` —
+jede Kachel blinkt weiß, sobald auf dem zugehörigen Controller ein Knopf
+gedrückt wird.
+
 ## Pokémon tauschen & kämpfen
 
 Das Link-Kabel ist immer aktiv (außer mit `--no-link`). Zum Tauschen geht
