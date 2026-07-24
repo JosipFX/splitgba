@@ -25,12 +25,20 @@ h1 span:nth-child(1) { color: var(--red); } h1 span:nth-child(2) { color: var(--
 h1 span:nth-child(3) { color: var(--blue); } h1 span:nth-child(4) { color: var(--yellow); }
 .claim { font-size: 1.25rem; color: var(--dim); max-width: 640px; margin: 0 auto 32px; }
 .buttons { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-.btn { display: inline-block; padding: 14px 26px; border-radius: 10px; text-decoration: none;
-	font-weight: 600; color: #10101a; transition: transform .1s ease; }
+.btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 26px;
+	border-radius: 10px; text-decoration: none; font-weight: 600; color: #10101a;
+	transition: transform .1s ease; }
 .btn:hover { transform: translateY(-2px); }
+.btn svg { width: 20px; height: 20px; flex: none; }
 .btn.mac { background: var(--green); } .btn.win { background: var(--blue); color: #fff; }
 .btn.linux { background: var(--yellow); } .btn.src { background: var(--panel); color: var(--text);
 	border: 1px solid var(--edge); }
+.corner { position: fixed; top: 14px; right: 14px; display: inline-flex; align-items: center;
+	gap: 8px; background: var(--panel); border: 1px solid var(--edge); color: var(--text);
+	padding: 8px 14px; border-radius: 999px; text-decoration: none; font-size: .9rem;
+	font-weight: 600; z-index: 10; }
+.corner:hover { border-color: var(--blue); }
+.corner svg { width: 16px; height: 16px; }
 .note { color: var(--dim); font-size: .9rem; margin-top: 16px; }
 section { padding: 48px 0; border-top: 1px solid var(--edge); }
 h2 { font-family: "SF Mono", ui-monospace, Consolas, monospace; font-size: 1.5rem;
@@ -57,16 +65,43 @@ a { color: var(--blue); }
 </head>
 <body>
 
+<a class="corner" href="https://github.com/JosipFX/splitgba" aria-label="SplitGBA auf GitHub">
+	<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+		<circle cx="6" cy="5" r="2.3"/><circle cx="18" cy="5" r="2.3"/><circle cx="6" cy="19" r="2.3"/>
+		<path d="M6 7v10M18 7c0 4.2-4.4 5.1-8 5.6" stroke="currentColor" stroke-width="2" fill="none"/>
+	</svg>
+	GitHub
+</a>
+
 <header class="wrap">
 	<img class="logo" src="img/icon.png" alt="SplitGBA Logo" width="96" height="96">
 	<h1><span>SPLIT</span><span>G</span><span>B</span><span>A</span></h1>
 	<p class="claim">Vier Game-Boy-Advance-Spiele gleichzeitig auf einem Fernseher —
 	mit echtem Link-Kabel-Feeling: tauschen, kämpfen, um die Wette spielen.</p>
 	<div class="buttons">
-		<a class="btn mac" href="https://github.com/JosipFX/splitgba/releases/latest">macOS herunterladen</a>
-		<a class="btn win" href="https://github.com/JosipFX/splitgba/releases/latest">Windows herunterladen</a>
-		<a class="btn linux" href="https://github.com/JosipFX/splitgba/releases/latest">Linux herunterladen</a>
-		<a class="btn src" href="https://github.com/JosipFX/splitgba">Quellcode auf GitHub</a>
+		<a class="btn mac" href="https://github.com/JosipFX/splitgba/releases/latest">
+			<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+				<path d="M12 6.6C10.4 4.3 6.6 4.6 5.2 7.6c-1.6 3.4.4 8.6 3 10.9 1.1 1 2.4 1 3.8.3 1.4.7 2.7.7 3.8-.3 2.6-2.3 4.6-7.5 3-10.9-1.4-3-5.2-3.3-6.8-1z"/>
+				<path d="M12.3 5.8c-.2-1.8 1.2-3.4 3-3.6.2 1.8-1.2 3.4-3 3.6z"/>
+			</svg>
+			macOS herunterladen</a>
+		<a class="btn win" href="https://github.com/JosipFX/splitgba/releases/latest">
+			<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+				<path d="M3 3h8.5v8.5H3zM12.5 3H21v8.5h-8.5zM3 12.5h8.5V21H3zM12.5 12.5H21V21h-8.5z"/>
+			</svg>
+			Windows herunterladen</a>
+		<a class="btn linux" href="https://github.com/JosipFX/splitgba/releases/latest">
+			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+			     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<path d="M4 5l6 6-6 6M13 19h7"/>
+			</svg>
+			Linux herunterladen</a>
+		<a class="btn src" href="https://github.com/JosipFX/splitgba">
+			<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+				<circle cx="6" cy="5" r="2.3"/><circle cx="18" cy="5" r="2.3"/><circle cx="6" cy="19" r="2.3"/>
+				<path d="M6 7v10M18 7c0 4.2-4.4 5.1-8 5.6" stroke="currentColor" stroke-width="2" fill="none"/>
+			</svg>
+			Quellcode auf GitHub</a>
 	</div>
 	<p class="note">macOS (Apple Silicon &amp; Intel, .dmg) · Windows 64-bit (Installer oder portable) ·
 	Linux x86_64 (AppImage oder tar.gz) — alles eigenständig, nichts zu installieren.<br>
