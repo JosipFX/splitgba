@@ -41,14 +41,28 @@ no second screen, no phones.
   (`game.p1.sav` … `game.p4.sav` are created automatically)
 - Audio mixing for all instances, solo/mute switching per player
 
-## Building
+## Download
 
-Currently developed and tested on **macOS** (Apple Silicon). The code is
-plain C++17 with SDL2 and CMake and contains nothing macOS-specific, so a
-Linux port is probably a small patch — untested, PRs welcome.
+Prebuilt packages for every release are on the
+[releases page](https://github.com/JosipFX/splitgba/releases):
 
-Requirements: Xcode Command Line Tools (or any C/C++ toolchain), CMake ≥ 3.20
-and SDL2 (`brew install cmake sdl2`).
+| Platform | Package |
+|---|---|
+| **macOS** (Apple Silicon + Intel) | `SplitGBA-<v>-macos.dmg` — drag the app to Applications. First launch: right-click → *Open* (unsigned open-source app) |
+| **Windows** (64-bit) | `SplitGBA-<v>-windows-setup.exe` installer, or the portable `.zip` |
+| **Linux** (x86_64) | `SplitGBA-<v>-linux-x86_64.AppImage` (`chmod +x`, run) or the `.tar.gz` |
+
+Put your ROM dumps either in a `roms/` folder next to where you launch, or
+in a `SplitGBA/` folder inside your home directory — the launcher finds
+both.
+
+## Building from source
+
+The code is plain C++17 with SDL2 and CMake; it builds on macOS, Linux and
+Windows (MinGW). Development happens on macOS (Apple Silicon).
+
+Requirements: a C/C++ toolchain, CMake ≥ 3.20 and SDL2
+(`brew install cmake sdl2` / `apt install cmake libsdl2-dev`).
 
 ```bash
 git clone --recursive https://github.com/JosipFX/splitgba.git

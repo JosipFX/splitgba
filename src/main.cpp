@@ -25,7 +25,6 @@
 #include <mgba-util/vfs.h>
 
 #include <fcntl.h>
-#include <sys/stat.h>
 
 #include <algorithm>
 #include <atomic>
@@ -33,10 +32,12 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
-#include <dirent.h>
+#include <filesystem>
 #include <mutex>
 #include <string>
 #include <vector>
+
+namespace fs = std::filesystem;
 
 #include "font5x7.h"
 
@@ -455,7 +456,7 @@ static std::string stripExtension(const std::string& path) {
 }
 
 static std::string baseName(const std::string& path) {
-	size_t slash = path.find_last_of('/');
+	size_t slash = path.find_last_of("/\\");
 	return slash == std::string::npos ? path : path.substr(slash + 1);
 }
 
@@ -795,10 +796,16 @@ static void togglePause() {
 // Einstellungen: Laden/Speichern (~/.config/splitgba.ini)
 
 static std::string settingsPath() {
+#ifdef _WIN32
+	const char* base = getenv("APPDATA");
+	fs::path dir = fs::path(base ? base : ".") / "splitgba";
+#else
 	const char* home = getenv("HOME");
-	std::string dir = std::string(home ? home : ".") + "/.config";
-	mkdir(dir.c_str(), 0755);
-	return dir + "/splitgba.ini";
+	fs::path dir = fs::path(home ? home : ".") / ".config";
+#endif
+	std::error_code ec;
+	fs::create_directories(dir, ec);
+	return (dir / "splitgba.ini").string();
 }
 
 static void loadSettings() {
@@ -1404,23 +1411,34 @@ static std::string romDisplayName(const std::string& path) {
 	return n;
 }
 
+static bool isGbaFile(const fs::path& p) {
+	std::string ext = p.extension().string();
+	std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+	return ext == ".gba";
+}
+
 static void scanRoms() {
 	g_app.romList.clear();
-	const char* dirs[] = {"roms", "roms-test", "."};
-	for (const char* dirname : dirs) {
-		DIR* d = opendir(dirname);
-		if (!d) {
-			continue;
-		}
+	std::vector<std::string> dirs = {"roms", "roms-test", "."};
+#ifdef _WIN32
+	const char* home = getenv("USERPROFILE");
+#else
+	const char* home = getenv("HOME");
+#endif
+	if (home) {
+		// fuer App-Bundle-Nutzer ohne Terminal: fester Ordner im Benutzerverzeichnis
+		dirs.push_back((fs::path(home) / "SplitGBA").string());
+	}
+	for (const std::string& dirname : dirs) {
+		std::error_code ec;
 		std::vector<std::string> found;
-		while (struct dirent* e = readdir(d)) {
-			std::string name = e->d_name;
-			if (name.size() > 4 && name.substr(name.size() - 4) == ".gba") {
-				found.push_back(std::string(dirname) == "." ? name
-				                                           : std::string(dirname) + "/" + name);
+		for (fs::directory_iterator it(dirname, ec), end; !ec && it != end;
+		     it.increment(ec)) {
+			if (it->is_regular_file(ec) && isGbaFile(it->path())) {
+				found.push_back(dirname == "." ? it->path().filename().string()
+				                               : it->path().generic_string());
 			}
 		}
-		closedir(d);
 		std::sort(found.begin(), found.end());
 		for (const auto& f : found) {
 			g_app.romList.push_back(f);
@@ -1518,7 +1536,8 @@ static void drawLauncher(int outW, int outH) {
 	if (g_app.romList.empty()) {
 		std::string msg = "KEINE ROMS GEFUNDEN";
 		drawText(msg, (outW - textWidth(msg, scale)) / 2, y, scale, 255, 120, 120);
-		std::string msg2 = "LEGE .GBA-DATEIEN IN DEN ORDNER roms/";
+		std::string msg2 = "LEGE .GBA-DATEIEN IN DEN ORDNER roms/ ODER " +
+		                   std::string("SplitGBA/ IM BENUTZERORDNER");
 		drawText(msg2, (outW - textWidth(msg2, scale)) / 2, y + rowH, scale, 210, 210, 215);
 		y += rowH * 3;
 	}
@@ -1814,18 +1833,13 @@ static void usage(const char* argv0) {
 }
 
 static bool collectRomsFromDir(const std::string& dir, std::vector<std::string>& roms) {
-	DIR* d = opendir(dir.c_str());
-	if (!d) {
-		return false;
-	}
+	std::error_code ec;
 	std::vector<std::string> found;
-	while (struct dirent* e = readdir(d)) {
-		std::string name = e->d_name;
-		if (name.size() > 4 && name.substr(name.size() - 4) == ".gba") {
-			found.push_back(dir + "/" + name);
+	for (fs::directory_iterator it(dir, ec), end; !ec && it != end; it.increment(ec)) {
+		if (it->is_regular_file(ec) && isGbaFile(it->path())) {
+			found.push_back(it->path().generic_string());
 		}
 	}
-	closedir(d);
 	std::sort(found.begin(), found.end());
 	for (const auto& f : found) {
 		if ((int)roms.size() < MAX_PLAYERS) {
@@ -1866,8 +1880,8 @@ static bool parseArgs(int argc, char** argv, Args& args) {
 			fprintf(stderr, "Unbekannte Option: %s\n", a.c_str());
 			return false;
 		} else {
-			struct stat st = {};
-			if (stat(a.c_str(), &st) == 0 && S_ISDIR(st.st_mode)) {
+			std::error_code ec;
+			if (fs::is_directory(a, ec)) {
 				collectRomsFromDir(a, args.roms);
 			} else if ((int)args.roms.size() < MAX_PLAYERS) {
 				args.roms.push_back(a);

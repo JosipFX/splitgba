@@ -1,4 +1,8 @@
 build/
+build-release/
+dist/
+AppDir/
+stage/
 roms/
 roms-test/
 *.gba

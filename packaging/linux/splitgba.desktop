@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=SplitGBA
+Comment=4-player split-screen GBA emulator with link cable
+Comment[de]=4-Spieler-Splitscreen-GBA-Emulator mit Link-Kabel
+Exec=splitgba
+Icon=splitgba
+Terminal=false
+Type=Application
+Categories=Game;Emulator;

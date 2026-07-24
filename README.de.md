@@ -16,7 +16,21 @@ denselben Lockstep-Mechanismus wie das offizielle mGBA-Multiplayer-Feature.
 > **Wichtig:** Es sind keine Spiele enthalten. Verwendet nur ROM-Dateien,
 > die ihr von euren eigenen Modulen gesichert habt.
 
-## Bauen
+## Download (fertige Pakete)
+
+Für jedes Release gibt es fertige Pakete auf der
+[Releases-Seite](https://github.com/JosipFX/splitgba/releases):
+
+| Plattform | Paket |
+|---|---|
+| **macOS** (Apple Silicon + Intel) | `SplitGBA-<v>-macos.dmg` — App in „Programme" ziehen. Erster Start: Rechtsklick → *Öffnen* (unsignierte Open-Source-App) |
+| **Windows** (64-bit) | `SplitGBA-<v>-windows-setup.exe` (Installer) oder das portable `.zip` |
+| **Linux** (x86_64) | `SplitGBA-<v>-linux-x86_64.AppImage` (`chmod +x`, starten) oder das `.tar.gz` |
+
+ROM-Dumps entweder in einen Ordner `roms/` neben dem Startort legen oder in
+den Ordner `SplitGBA/` im Benutzerverzeichnis — das Startmenü findet beide.
+
+## Selbst bauen
 
 Einmalig nötig: Xcode Command Line Tools sowie [Homebrew](https://brew.sh)
 mit `cmake` und `sdl2` (`brew install cmake sdl2`).

@@ -1,0 +1,34 @@
+# Schneller Build-Check auf jedem Push (macOS + Linux, ohne Paketierung).
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [macos-14, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Abhaengigkeiten (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libsdl2-dev
+      - name: Abhaengigkeiten (macOS)
+        if: runner.os == 'macOS'
+        run: brew install sdl2 ninja
+      - name: Bauen
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+      - name: Smoke-Test
+        run: |
+          python3 tools/make_test_rom.py roms-test
+          SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy ./build/splitgba --screenshot smoke.bmp --frames 60 roms-test/test_p1.gba roms-test/test_p2.gba

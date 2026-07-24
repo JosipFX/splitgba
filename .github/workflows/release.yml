@@ -1,0 +1,123 @@
+# Baut die Release-Pakete fuer macOS (.dmg), Linux (AppImage + tar.gz) und
+# Windows (Inno-Setup-Installer + portable .zip) und haengt sie an das
+# GitHub-Release des Tags an. Ausloesen: Tag "v*" pushen (oder manuell).
+name: release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: DMG bauen
+        run: ./packaging/macos/make_dmg.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: dist/*.dmg
+
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Abhaengigkeiten installieren
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libfuse2 \
+            libasound2-dev libpulse-dev libx11-dev libxext-dev libxrandr-dev \
+            libxcursor-dev libxfixes-dev libxi-dev libxss-dev libwayland-dev \
+            libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev \
+            libegl1-mesa-dev libdbus-1-dev libudev-dev libibus-1.0-dev
+      - name: Bauen
+        run: |
+          cmake -S . -B build-release -G Ninja -DCMAKE_BUILD_TYPE=Release -DVENDOR_SDL2=ON
+          cmake --build build-release
+      - name: Paketieren (AppImage + tar.gz)
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p dist
+          # tar.gz
+          mkdir -p stage/SplitGBA
+          cp build-release/splitgba README.md README.de.md LICENSE stage/SplitGBA/
+          cp packaging/linux/splitgba.desktop packaging/icons/icon_512.png stage/SplitGBA/
+          tar czf "dist/SplitGBA-$VERSION-linux-x86_64.tar.gz" -C stage SplitGBA
+          # AppImage
+          mkdir -p AppDir/usr/bin AppDir/usr/share/applications \
+                   AppDir/usr/share/icons/hicolor/512x512/apps
+          cp build-release/splitgba AppDir/usr/bin/
+          cp packaging/linux/splitgba.desktop AppDir/usr/share/applications/
+          cp packaging/icons/icon_512.png AppDir/usr/share/icons/hicolor/512x512/apps/splitgba.png
+          curl -fsSL -o linuxdeploy \
+            https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          chmod +x linuxdeploy
+          APPIMAGE_EXTRACT_AND_RUN=1 ./linuxdeploy --appdir AppDir --output appimage
+          mv SplitGBA*.AppImage "dist/SplitGBA-$VERSION-linux-x86_64.AppImage"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: dist/*
+
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: >-
+            git
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+      - name: Bauen
+        run: |
+          cmake -S . -B build-release -G Ninja -DCMAKE_BUILD_TYPE=Release -DVENDOR_SDL2=ON
+          cmake --build build-release
+      - name: Installer bauen (Inno Setup)
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress
+          $version = "$env:GITHUB_REF_NAME".TrimStart("v")
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /DMyAppVersion=$version packaging\windows\installer.iss
+      - name: Portable Zip
+        shell: pwsh
+        run: |
+          $version = "$env:GITHUB_REF_NAME".TrimStart("v")
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          New-Item -ItemType Directory -Force -Path stage\SplitGBA | Out-Null
+          Copy-Item build-release\splitgba.exe,README.md,README.de.md,LICENSE stage\SplitGBA\
+          Compress-Archive -Path stage\SplitGBA -DestinationPath "dist\SplitGBA-$version-windows-portable.zip" -Force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/*
+
+  release:
+    needs: [macos, linux, windows]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
