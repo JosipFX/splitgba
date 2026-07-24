@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SplitGBA — 4-Spieler-Splitscreen-GBA-Emulator mit Link-Kabel</title>
+<meta name="description" content="SplitGBA: bis zu vier Game-Boy-Advance-Spiele gleichzeitig auf einem Fernseher — mit emuliertem Link-Kabel zum Tauschen und Kämpfen, Race-Timer und globaler Tempo-Regelung. Open Source für macOS, Windows und Linux.">
+<link rel="icon" href="img/icon.png">
+<style>
+:root {
+	--bg: #131318; --panel: #1b1c24; --edge: #2c2d3a;
+	--text: #e8e8ee; --dim: #9a9aa8;
+	--red: #e24c4c; --green: #56c878; --blue: #5c8cee; --yellow: #eec852;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--text);
+	font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	line-height: 1.6; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+header { text-align: center; padding: 72px 0 48px; }
+header img.logo { width: 96px; height: 96px; image-rendering: pixelated; }
+h1 { font-family: "SF Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+	font-size: clamp(2.2rem, 7vw, 3.6rem); letter-spacing: 0.08em; margin: 16px 0 8px; }
+h1 span:nth-child(1) { color: var(--red); } h1 span:nth-child(2) { color: var(--green); }
+h1 span:nth-child(3) { color: var(--blue); } h1 span:nth-child(4) { color: var(--yellow); }
+.claim { font-size: 1.25rem; color: var(--dim); max-width: 640px; margin: 0 auto 32px; }
+.buttons { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.btn { display: inline-block; padding: 14px 26px; border-radius: 10px; text-decoration: none;
+	font-weight: 600; color: #10101a; transition: transform .1s ease; }
+.btn:hover { transform: translateY(-2px); }
+.btn.mac { background: var(--green); } .btn.win { background: var(--blue); color: #fff; }
+.btn.linux { background: var(--yellow); } .btn.src { background: var(--panel); color: var(--text);
+	border: 1px solid var(--edge); }
+.note { color: var(--dim); font-size: .9rem; margin-top: 16px; }
+section { padding: 48px 0; border-top: 1px solid var(--edge); }
+h2 { font-family: "SF Mono", ui-monospace, Consolas, monospace; font-size: 1.5rem;
+	margin-bottom: 24px; letter-spacing: 0.04em; }
+.shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.shots figure.wide { grid-column: 1 / -1; }
+.shots img { width: 100%; border-radius: 8px; border: 1px solid var(--edge); display: block; }
+.shots figcaption { color: var(--dim); font-size: .85rem; padding-top: 6px; }
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.card { background: var(--panel); border: 1px solid var(--edge); border-radius: 10px; padding: 20px; }
+.card h3 { font-size: 1.05rem; margin-bottom: 8px; }
+.card h3 em { font-style: normal; margin-right: 8px; }
+.card p { color: var(--dim); font-size: .95rem; }
+.rules { background: var(--panel); border: 1px solid var(--edge); border-radius: 10px;
+	padding: 24px; }
+.rules li { margin: 10px 0 10px 20px; }
+.rules strong { color: var(--yellow); }
+.legal { color: var(--dim); font-size: .9rem; }
+footer { border-top: 1px solid var(--edge); padding: 32px 0 56px; color: var(--dim);
+	font-size: .9rem; text-align: center; }
+footer a { color: var(--text); }
+a { color: var(--blue); }
+</style>
+</head>
+<body>
+
+<header class="wrap">
+	<img class="logo" src="img/icon.png" alt="SplitGBA Logo" width="96" height="96">
+	<h1><span>SPLIT</span><span>G</span><span>B</span><span>A</span></h1>
+	<p class="claim">Vier Game-Boy-Advance-Spiele gleichzeitig auf einem Fernseher —
+	mit echtem Link-Kabel-Feeling: tauschen, kämpfen, um die Wette spielen.</p>
+	<div class="buttons">
+		<a class="btn mac" href="https://github.com/JosipFX/splitgba/releases/latest">macOS herunterladen</a>
+		<a class="btn win" href="https://github.com/JosipFX/splitgba/releases/latest">Windows herunterladen</a>
+		<a class="btn linux" href="https://github.com/JosipFX/splitgba/releases/latest">Linux herunterladen</a>
+		<a class="btn src" href="https://github.com/JosipFX/splitgba">Quellcode auf GitHub</a>
+	</div>
+	<p class="note">macOS (Apple Silicon &amp; Intel, .dmg) · Windows 64-bit (Installer oder portable) ·
+	Linux x86_64 (AppImage oder tar.gz) — alles eigenständig, nichts zu installieren.<br>
+	English documentation: <a href="https://github.com/JosipFX/splitgba#readme">README</a></p>
+</header>
+
+<section class="wrap">
+	<h2>// SCREENSHOTS</h2>
+	<div class="shots">
+		<figure class="wide">
+			<img src="img/anguna4.png" alt="Vier GBA-Instanzen im 2x2-Splitscreen mit dem Homebrew-Spiel Anguna">
+			<figcaption>Vier Instanzen, ein Bildschirm — hier mit dem frei erhältlichen Homebrew-Spiel
+			<a href="https://www.bitethechili.com/anguna">Anguna</a>. Jeder Spieler hat einen eigenen Spielstand.</figcaption>
+		</figure>
+		<figure>
+			<img src="img/launcher.png" alt="Startmenü mit ROM-Auswahl und Spielerzahl">
+			<figcaption>Startmenü: ROM pro Spieler, Spielerzahl, Namen — mit Tastatur oder Controller bedienbar.</figcaption>
+		</figure>
+		<figure>
+			<img src="img/menu.png" alt="Einstellungsmenü mit Spielernamen, Lautstärke pro Spieler und Countdown-Timer">
+			<figcaption>Einstellungen: Namen, Lautstärke pro Spieler, Timer-Modi, Savestates — live im Spiel.</figcaption>
+		</figure>
+		<figure>
+			<img src="img/pads.png" alt="Controller-Zuweisungsseite mit zwei erkannten Switch Pro Controllern">
+			<figcaption>Controller zuweisen: Spieler wählen, Knopf drücken, fertig. Hotplug inklusive.</figcaption>
+		</figure>
+		<figure>
+			<img src="img/timer.png" alt="3-Spieler-Modus mit grossem Race-Timer in der freien Bildschirmecke">
+			<figcaption>Bei drei Spielern wird die freie Ecke zum grossen Race-Timer.</figcaption>
+		</figure>
+	</div>
+</section>
+
+<section class="wrap">
+	<h2>// FEATURES</h2>
+	<div class="features">
+		<div class="card"><h3><em>🕹</em>1–4 Spieler, ein Bildschirm</h3>
+		<p>Splitscreen im 2x2-Raster, framegenau synchron. Controller einfach einstecken —
+		Xbox, PlayStation, Switch Pro, 8BitDo — oder per Menü zuweisen.</p></div>
+		<div class="card"><h3><em>🔗</em>Link-Kabel inklusive</h3>
+		<p>Alle Instanzen hängen am emulierten 4-Spieler-Link-Kabel (mGBA-Lockstep).
+		Pokémon tauschen und kämpfen funktioniert wie am echten Gerät.</p></div>
+		<div class="card"><h3><em>⏱</em>Race-Modus</h3>
+		<p>Ein Hotkey startet alle Spiele synchron neu, dazu Stoppuhr oder Countdown
+		gross im Bild — wer ist nach 30 Minuten am weitesten?</p></div>
+		<div class="card"><h3><em>⏩</em>Tempo 1x–4x</h3>
+		<p>Ein Tastendruck beschleunigt alle Spiele gleichzeitig — Grind-Phasen
+		werden erträglich, und niemand kann heimlich vorspulen.</p></div>
+		<div class="card"><h3><em>💾</em>Savestates für alle</h3>
+		<p>Ein Druck auf F5 sichert alle vier Spielstände gleichzeitig,
+		F9 lädt sie wieder — auch über das Menü erreichbar.</p></div>
+		<div class="card"><h3><em>🔊</em>Sound pro Spieler</h3>
+		<p>Eigener Lautstärkeregler für jeden Bildschirm, plus globales
+		Stummschalten. Alle Einstellungen werden gespeichert.</p></div>
+	</div>
+</section>
+
+<section class="wrap">
+	<h2>// TAUSCHEN &amp; KÄMPFEN — SO KLAPPT ES</h2>
+	<div class="rules">
+		<ul>
+			<li><strong>Spieler 1 muss immer teilnehmen.</strong> Wie am echten Kabel taktet nur
+			das erste Gerät die Verbindung. Das HUD zeigt live, wer im Link-Modus ist,
+			und warnt, wenn Spieler 1 fehlt.</li>
+			<li>Beide Spieler gehen im Spiel in den <strong>Kabelclub</strong> (obere Etage im
+			Pokémon-Center) — genau wie auf echter Hardware.</li>
+			<li>Fürs Tauschen aufs <strong>Tempo 1x</strong> schalten, und am saubersten nur
+			die zwei Beteiligten starten.</li>
+			<li>Gen-3-Regeln gelten weiter: Feuerrot/Blattgrün brauchen den Nationaldex
+			für den Tausch mit Rubin/Saphir/Smaragd.</li>
+		</ul>
+	</div>
+</section>
+
+<section class="wrap">
+	<h2>// RECHTLICHES</h2>
+	<p class="legal">SplitGBA enthält keine Spiele und lädt keine herunter. Verwendet
+	ausschliesslich ROM-Dateien, die ihr von euren eigenen Modulen gesichert habt
+	(z.&nbsp;B. mit einem GB&nbsp;Operator). Nintendo, Game Boy Advance und Pokémon sind Marken
+	ihrer jeweiligen Inhaber; dieses Projekt steht in keiner Verbindung zu ihnen.
+	Zum Ausprobieren ohne Spiele liegt dem Projekt ein Generator für freie
+	Test-ROMs bei, und Homebrew wie Anguna ist gratis erhältlich.</p>
+</section>
+
+<footer>
+	<div class="wrap">
+		<a href="https://github.com/JosipFX/splitgba">github.com/JosipFX/splitgba</a> ·
+		Eigener Code <a href="https://github.com/JosipFX/splitgba/blob/main/LICENSE">MIT-lizenziert</a> ·
+		baut auf dem grossartigen <a href="https://mgba.io">mGBA</a>-Core (MPL-2.0) auf ·
+		100% Open Source
+	</div>
+</footer>
+
+</body>
+</html>

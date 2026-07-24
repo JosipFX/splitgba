@@ -196,6 +196,13 @@ Tipps:
   dieselben Regeln wie mit echten Link-Kabeln.
 - Entwickelt und getestet auf macOS (Apple Silicon); Linux ist ungetestet.
 
+## Webseite
+
+Im Ordner [docs/](docs/) liegt eine fertige Community-Seite (ein
+eigenständiges `index.html` mit Screenshots). Einfach auf beliebiges
+Hosting hochladen — oder direkt über GitHub Pages ausliefern
+(Repo-Einstellungen → Pages → Branch `main`, Ordner `/docs`).
+
 ## Lizenz
 
 Eigener Code: [MIT](LICENSE). Der eingebettete mGBA-Core

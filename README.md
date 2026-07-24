@@ -210,6 +210,13 @@ For development there are two headless flags: `--screenshot out.bmp
 after N seconds and prints per-player frame counts (useful for verifying
 pacing: at 1x you should see ~60 fps per player, at 4x ~240).
 
+## Website
+
+A ready-to-host community page lives in [docs/](docs/) — a single
+self-contained `index.html` plus screenshots. Upload the folder to any web
+host, or serve it directly with GitHub Pages (repo Settings → Pages →
+branch `main`, folder `/docs`).
+
 ## Legal
 
 SplitGBA contains **no games** and downloads none. Use only ROM files you
