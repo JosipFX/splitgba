@@ -1,199 +1,279 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SplitGBA — 4-Spieler-Splitscreen-GBA-Emulator mit Link-Kabel</title>
-<meta name="description" content="SplitGBA: bis zu vier Game-Boy-Advance-Spiele gleichzeitig auf einem Fernseher — mit emuliertem Link-Kabel zum Tauschen und Kämpfen, Race-Timer und globaler Tempo-Regelung. Open Source für macOS, Windows und Linux.">
+<title>SplitGBA — Four GBA games. One TV. Real link cable.</title>
+<meta name="description" content="SplitGBA runs up to four Game Boy Advance games side by side on one screen, connected through an emulated link cable — trade, battle and race your friends. Open source for macOS, Windows and Linux.">
 <link rel="icon" href="img/icon.png">
 <style>
 :root {
-	--bg: #131318; --panel: #1b1c24; --edge: #2c2d3a;
-	--text: #e8e8ee; --dim: #9a9aa8;
+	--bg: #16161a; --bg-soft: #1b1b20; --panel: #202127; --edge: #2e2f38;
+	--edge-hi: #43455a; --text: #eceef4; --dim: #a2a5b4;
 	--red: #e24c4c; --green: #56c878; --blue: #5c8cee; --yellow: #eec852;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: var(--bg); color: var(--text);
-	font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-	line-height: 1.6; }
-.wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
-header { text-align: center; padding: 72px 0 48px; }
-header img.logo { width: 96px; height: 96px; image-rendering: pixelated; }
-h1 { font-family: "SF Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
-	font-size: clamp(2.2rem, 7vw, 3.6rem); letter-spacing: 0.08em; margin: 16px 0 8px; }
-h1 span:nth-child(1) { color: var(--red); } h1 span:nth-child(2) { color: var(--green); }
-h1 span:nth-child(3) { color: var(--blue); } h1 span:nth-child(4) { color: var(--yellow); }
-.claim { font-size: 1.25rem; color: var(--dim); max-width: 640px; margin: 0 auto 32px; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); overflow-x: hidden;
+	font-family: Inter, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	line-height: 1.65; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---- Aurora (Shader-Gradient-Look, reines CSS) ---- */
+.aurora { position: absolute; width: 760px; height: 760px; border-radius: 50%;
+	filter: blur(95px); opacity: .5; pointer-events: none; z-index: 0;
+	background:
+		radial-gradient(circle at 30% 30%, var(--blue) 0%, transparent 58%),
+		radial-gradient(circle at 72% 38%, var(--red) 0%, transparent 52%),
+		radial-gradient(circle at 46% 72%, var(--green) 0%, transparent 54%),
+		radial-gradient(circle at 82% 78%, var(--yellow) 0%, transparent 48%);
+	animation: drift 16s ease-in-out infinite alternate; }
+.aurora.two { width: 560px; height: 560px; opacity: .28; animation-duration: 22s;
+	animation-direction: alternate-reverse; }
+@keyframes drift {
+	from { transform: translate(-6%, -4%) rotate(0deg) scale(1); }
+	to   { transform: translate(7%, 6%) rotate(45deg) scale(1.18); }
+}
+@media (prefers-reduced-motion: reduce) { .aurora { animation: none; } }
+
+/* ---- Navigation ---- */
+nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px);
+	background: rgba(22,22,26,.78); border-bottom: 1px solid var(--edge); }
+.navrow { display: flex; align-items: center; gap: 24px; height: 58px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700;
+	color: var(--text); font-size: 1.05rem; }
+.brand img { width: 26px; height: 26px; image-rendering: pixelated; }
+.navlinks { margin-left: auto; display: flex; align-items: center; gap: 20px;
+	font-size: .92rem; font-weight: 500; }
+.navlinks a { color: var(--dim); }
+.navlinks a:hover { color: var(--text); text-decoration: none; }
+.navlinks svg { width: 20px; height: 20px; fill: var(--dim); vertical-align: middle; }
+.navlinks a:hover svg { fill: var(--text); }
+
+/* ---- Hero ---- */
+header { position: relative; text-align: center; padding: 96px 0 88px; overflow: visible; }
+header .aurora { top: -180px; left: 50%; margin-left: -380px; }
+.hero-inner { position: relative; z-index: 1; }
+.pill { display: inline-flex; align-items: center; gap: 8px; font-size: .85rem;
+	font-weight: 600; color: var(--dim); background: var(--panel);
+	border: 1px solid var(--edge); border-radius: 999px; padding: 6px 16px;
+	margin-bottom: 28px; }
+.pill b { color: var(--green); }
+h1.wordmark { font-size: clamp(3.2rem, 10vw, 5.5rem); font-weight: 800;
+	letter-spacing: -0.02em; line-height: 1.05;
+	background: linear-gradient(120deg, var(--blue) 12%, var(--green) 40%, var(--yellow) 68%, var(--red) 95%);
+	-webkit-background-clip: text; background-clip: text; color: transparent;
+	filter: drop-shadow(0 0 32px rgba(92,140,238,.35)); }
+.tagline { font-size: clamp(1.3rem, 3.4vw, 1.9rem); font-weight: 700; margin-top: 14px; }
+.sub { color: var(--dim); max-width: 640px; margin: 18px auto 36px; font-size: 1.08rem; }
 .buttons { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-.btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 26px;
-	border-radius: 10px; text-decoration: none; font-weight: 600; color: #10101a;
-	transition: transform .1s ease; }
-.btn:hover { transform: translateY(-2px); }
-.btn svg { width: 20px; height: 20px; flex: none; }
-.btn.mac { background: var(--green); } .btn.win { background: var(--blue); color: #fff; }
-.btn.linux { background: var(--yellow); } .btn.src { background: var(--panel); color: var(--text);
-	border: 1px solid var(--edge); }
-.corner { position: fixed; top: 14px; right: 14px; display: inline-flex; align-items: center;
-	gap: 8px; background: var(--panel); border: 1px solid var(--edge); color: var(--text);
-	padding: 8px 14px; border-radius: 999px; text-decoration: none; font-size: .9rem;
-	font-weight: 600; z-index: 10; }
-.corner:hover { border-color: var(--blue); }
-.corner svg { width: 16px; height: 16px; }
-.note { color: var(--dim); font-size: .9rem; margin-top: 16px; }
-section { padding: 48px 0; border-top: 1px solid var(--edge); }
-h2 { font-family: "SF Mono", ui-monospace, Consolas, monospace; font-size: 1.5rem;
-	margin-bottom: 24px; letter-spacing: 0.04em; }
+.btn { display: inline-flex; align-items: center; gap: 10px; padding: 13px 26px;
+	border-radius: 999px; font-weight: 600; font-size: .98rem; color: var(--text);
+	background: var(--panel); border: 1px solid var(--edge);
+	transition: border-color .15s, transform .1s; }
+.btn:hover { border-color: var(--edge-hi); transform: translateY(-2px); text-decoration: none; }
+.btn.primary { background: linear-gradient(120deg, var(--blue), var(--green));
+	color: #0d0e12; border: none; }
+.btn svg { width: 19px; height: 19px; fill: currentColor; flex: none; }
+.btn.linux svg { fill: none; stroke: currentColor; stroke-width: 2.4;
+	stroke-linecap: round; stroke-linejoin: round; }
+.platnote { color: var(--dim); font-size: .88rem; margin-top: 22px; }
+
+/* ---- Sections ---- */
+section { position: relative; padding: 76px 0 24px; }
+h2 { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 8px; }
+.lead { color: var(--dim); margin-bottom: 34px; max-width: 620px; }
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
+.card { position: relative; z-index: 1; background: var(--panel); border: 1px solid var(--edge);
+	border-radius: 12px; padding: 24px; transition: border-color .15s; }
+.card:hover { border-color: var(--edge-hi); }
+.card .ico { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+	background: var(--bg-soft); border: 1px solid var(--edge); border-radius: 10px;
+	font-size: 1.3rem; margin-bottom: 14px; }
+.card h3 { font-size: 1.02rem; margin-bottom: 6px; }
+.card p { color: var(--dim); font-size: .93rem; }
+#features .aurora { top: 40px; right: -420px; }
+
 .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
 .shots figure.wide { grid-column: 1 / -1; }
-.shots img { width: 100%; border-radius: 8px; border: 1px solid var(--edge); display: block; }
-.shots figcaption { color: var(--dim); font-size: .85rem; padding-top: 6px; }
-.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
-.card { background: var(--panel); border: 1px solid var(--edge); border-radius: 10px; padding: 20px; }
-.card h3 { font-size: 1.05rem; margin-bottom: 8px; }
-.card h3 em { font-style: normal; margin-right: 8px; }
-.card p { color: var(--dim); font-size: .95rem; }
-.rules { background: var(--panel); border: 1px solid var(--edge); border-radius: 10px;
-	padding: 24px; }
-.rules li { margin: 10px 0 10px 20px; }
-.rules strong { color: var(--yellow); }
-.legal { color: var(--dim); font-size: .9rem; }
-footer { border-top: 1px solid var(--edge); padding: 32px 0 56px; color: var(--dim);
-	font-size: .9rem; text-align: center; }
+.shots img { width: 100%; border-radius: 10px; border: 1px solid var(--edge); display: block; }
+.shots figcaption { color: var(--dim); font-size: .85rem; padding-top: 8px; }
+
+.rules { position: relative; z-index: 1; background: var(--panel); border: 1px solid var(--edge);
+	border-radius: 12px; padding: 26px 30px; }
+.rules li { margin: 10px 0 10px 20px; color: var(--dim); }
+.rules li strong { color: var(--yellow); }
+
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.step { position: relative; z-index: 1; background: var(--panel); border: 1px solid var(--edge);
+	border-radius: 12px; padding: 24px; }
+.step .num { font-size: .8rem; font-weight: 700; color: var(--green);
+	letter-spacing: .12em; margin-bottom: 8px; }
+.step h3 { font-size: 1.02rem; margin-bottom: 6px; }
+.step p { color: var(--dim); font-size: .93rem; }
+pre.code { position: relative; z-index: 1; background: #131317; border: 1px solid var(--edge);
+	border-radius: 12px; padding: 20px 24px; margin-top: 20px; overflow-x: auto;
+	font-family: "SF Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+	font-size: .9rem; line-height: 1.7; color: var(--text); }
+pre.code .c { color: var(--dim); }
+pre.code .g { color: var(--green); }
+#get-started .aurora { bottom: -260px; left: -420px; }
+
+.legal { color: var(--dim); font-size: .9rem; max-width: 760px; }
+footer { border-top: 1px solid var(--edge); margin-top: 72px; padding: 34px 0 56px;
+	color: var(--dim); font-size: .9rem; text-align: center; }
 footer a { color: var(--text); }
-a { color: var(--blue); }
 </style>
 </head>
 <body>
 
-<a class="corner" href="https://github.com/JosipFX/splitgba" aria-label="SplitGBA auf GitHub">
-	<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-		<circle cx="6" cy="5" r="2.3"/><circle cx="18" cy="5" r="2.3"/><circle cx="6" cy="19" r="2.3"/>
-		<path d="M6 7v10M18 7c0 4.2-4.4 5.1-8 5.6" stroke="currentColor" stroke-width="2" fill="none"/>
-	</svg>
-	GitHub
-</a>
-
-<header class="wrap">
-	<img class="logo" src="img/icon.png" alt="SplitGBA Logo" width="96" height="96">
-	<h1><span>SPLIT</span><span>G</span><span>B</span><span>A</span></h1>
-	<p class="claim">Vier Game-Boy-Advance-Spiele gleichzeitig auf einem Fernseher —
-	mit echtem Link-Kabel-Feeling: tauschen, kämpfen, um die Wette spielen.</p>
-	<div class="buttons">
-		<a class="btn mac" href="https://github.com/JosipFX/splitgba/releases/latest">
-			<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-				<path d="M12 6.6C10.4 4.3 6.6 4.6 5.2 7.6c-1.6 3.4.4 8.6 3 10.9 1.1 1 2.4 1 3.8.3 1.4.7 2.7.7 3.8-.3 2.6-2.3 4.6-7.5 3-10.9-1.4-3-5.2-3.3-6.8-1z"/>
-				<path d="M12.3 5.8c-.2-1.8 1.2-3.4 3-3.6.2 1.8-1.2 3.4-3 3.6z"/>
-			</svg>
-			macOS herunterladen</a>
-		<a class="btn win" href="https://github.com/JosipFX/splitgba/releases/latest">
-			<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-				<path d="M3 3h8.5v8.5H3zM12.5 3H21v8.5h-8.5zM3 12.5h8.5V21H3zM12.5 12.5H21V21h-8.5z"/>
-			</svg>
-			Windows herunterladen</a>
-		<a class="btn linux" href="https://github.com/JosipFX/splitgba/releases/latest">
-			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
-			     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-				<path d="M4 5l6 6-6 6M13 19h7"/>
-			</svg>
-			Linux herunterladen</a>
-		<a class="btn src" href="https://github.com/JosipFX/splitgba">
-			<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-				<circle cx="6" cy="5" r="2.3"/><circle cx="18" cy="5" r="2.3"/><circle cx="6" cy="19" r="2.3"/>
-				<path d="M6 7v10M18 7c0 4.2-4.4 5.1-8 5.6" stroke="currentColor" stroke-width="2" fill="none"/>
-			</svg>
-			Quellcode auf GitHub</a>
+<nav><div class="wrap navrow">
+	<a class="brand" href="#"><img src="img/icon.png" alt="">SplitGBA</a>
+	<div class="navlinks">
+		<a href="#features">Features</a>
+		<a href="#screenshots">Screenshots</a>
+		<a href="#link">Link&nbsp;Cable</a>
+		<a href="#get-started">Get&nbsp;Started</a>
+		<a href="https://github.com/JosipFX/splitgba/blob/main/README.de.md">Deutsch</a>
+		<a href="https://github.com/JosipFX/splitgba" aria-label="GitHub">
+			<svg viewBox="0 0 24 24"><circle cx="6" cy="5" r="2.3"/><circle cx="18" cy="5" r="2.3"/><circle cx="6" cy="19" r="2.3"/><path d="M6 7v10M18 7c0 4.2-4.4 5.1-8 5.6" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+		</a>
 	</div>
-	<p class="note">macOS (Apple Silicon &amp; Intel, .dmg) · Windows 64-bit (Installer oder portable) ·
-	Linux x86_64 (AppImage oder tar.gz) — alles eigenständig, nichts zu installieren.<br>
-	English documentation: <a href="https://github.com/JosipFX/splitgba#readme">README</a></p>
+</div></nav>
+
+<header>
+	<div class="aurora"></div>
+	<div class="wrap hero-inner">
+		<a class="pill" href="https://github.com/JosipFX/splitgba/releases/latest"><b>NEW</b> v0.3.0 — English UI, controller assignment &amp; live link status →</a>
+		<h1 class="wordmark">SplitGBA</h1>
+		<p class="tagline">Four GBA games. One TV. Real link cable.</p>
+		<p class="sub">Couch multiplayer for the Game Boy Advance: up to four instances side by side,
+		connected through an emulated 4-player link cable. Trade and battle Pokémon,
+		race the same save file against the clock, and crank the speed together.</p>
+		<div class="buttons">
+			<a class="btn primary" href="https://github.com/JosipFX/splitgba/releases/latest">
+				<svg viewBox="0 0 24 24"><path d="M12 3v10.6l-3.6-3.6-1.8 1.8L12 18.2l5.4-6.4-1.8-1.8-3.6 3.6V3zM5 19h14v2H5z"/></svg>
+				Download</a>
+			<a class="btn" href="https://github.com/JosipFX/splitgba/releases/latest">
+				<svg viewBox="0 0 24 24"><path d="M12 6.6C10.4 4.3 6.6 4.6 5.2 7.6c-1.6 3.4.4 8.6 3 10.9 1.1 1 2.4 1 3.8.3 1.4.7 2.7.7 3.8-.3 2.6-2.3 4.6-7.5 3-10.9-1.4-3-5.2-3.3-6.8-1z"/><path d="M12.3 5.8c-.2-1.8 1.2-3.4 3-3.6.2 1.8-1.2 3.4-3 3.6z"/></svg>
+				macOS</a>
+			<a class="btn" href="https://github.com/JosipFX/splitgba/releases/latest">
+				<svg viewBox="0 0 24 24"><path d="M3 3h8.5v8.5H3zM12.5 3H21v8.5h-8.5zM3 12.5h8.5V21H3zM12.5 12.5H21V21h-8.5z"/></svg>
+				Windows</a>
+			<a class="btn linux" href="https://github.com/JosipFX/splitgba/releases/latest">
+				<svg viewBox="0 0 24 24"><path d="M4 5l6 6-6 6M13 19h7"/></svg>
+				Linux</a>
+		</div>
+		<p class="platnote">macOS (Apple Silicon &amp; Intel) · Windows 64-bit installer or portable ·
+		Linux AppImage or tar.gz — fully self-contained, nothing else to install.</p>
+	</div>
 </header>
 
-<section class="wrap">
-	<h2>// SCREENSHOTS</h2>
+<section id="features"><div class="wrap">
+	<div class="aurora two"></div>
+	<h2>Built for game night</h2>
+	<p class="lead">Everything you need to put four Game Boys on one television —
+	and nothing you don't.</p>
+	<div class="features">
+		<div class="card"><div class="ico">🕹️</div><h3>1–4 players, one screen</h3>
+		<p>Frame-perfect split-screen. Xbox, PlayStation, Switch Pro and 8BitDo pads
+		work out of the box — hotplug them or assign per player in the menu.
+		Player 1 can use the keyboard.</p></div>
+		<div class="card"><div class="ico">🔗</div><h3>Real link cable</h3>
+		<p>All instances share an emulated 4-player link bus (mGBA lockstep).
+		Trading and battling work exactly like on hardware, with live link
+		status in the HUD.</p></div>
+		<div class="card"><div class="ico">⏱️</div><h3>Race mode</h3>
+		<p>One hotkey resets every game in sync. A stopwatch or countdown runs
+		big on screen — who gets furthest in 30 minutes?</p></div>
+		<div class="card"><div class="ico">⏩</div><h3>Global speed 1x–4x</h3>
+		<p>One key press fast-forwards everyone at once. Grinding gets bearable
+		and nobody can secretly speed ahead.</p></div>
+		<div class="card"><div class="ico">💾</div><h3>Save states for all</h3>
+		<p>F5 snapshots all four games at the same moment, F9 restores them.
+		Separate cartridge saves per player, even with one shared ROM.</p></div>
+		<div class="card"><div class="ico">🌍</div><h3>English &amp; German</h3>
+		<p>Launcher, menus and controls overview in English by default —
+		switch to German live from the settings. Everything persists.</p></div>
+	</div>
+</div></section>
+
+<section id="screenshots"><div class="wrap">
+	<h2>Screenshots</h2>
+	<p class="lead">Running the freely distributable homebrew
+	<a href="https://www.bitethechili.com/anguna">Anguna</a> — bring your own
+	cartridge dumps for the real thing.</p>
 	<div class="shots">
 		<figure class="wide">
-			<img src="img/anguna4.png" alt="Vier GBA-Instanzen im 2x2-Splitscreen mit dem Homebrew-Spiel Anguna">
-			<figcaption>Vier Instanzen, ein Bildschirm — hier mit dem frei erhältlichen Homebrew-Spiel
-			<a href="https://www.bitethechili.com/anguna">Anguna</a>. Jeder Spieler hat einen eigenen Spielstand.</figcaption>
+			<img src="img/anguna4.png" alt="Four GBA instances in a 2x2 split-screen grid" loading="lazy">
+			<figcaption>Four instances, one screen — each player with their own save file.</figcaption>
 		</figure>
-		<figure>
-			<img src="img/launcher.png" alt="Startmenü mit ROM-Auswahl und Spielerzahl">
-			<figcaption>Startmenü: ROM pro Spieler, Spielerzahl, Namen — mit Tastatur oder Controller bedienbar.</figcaption>
-		</figure>
-		<figure>
-			<img src="img/menu.png" alt="Einstellungsmenü mit Spielernamen, Lautstärke pro Spieler und Countdown-Timer">
-			<figcaption>Einstellungen: Namen, Lautstärke pro Spieler, Timer-Modi, Savestates — live im Spiel.</figcaption>
-		</figure>
-		<figure>
-			<img src="img/pads.png" alt="Controller-Zuweisungsseite mit zwei erkannten Switch Pro Controllern">
-			<figcaption>Controller zuweisen: Spieler wählen, Knopf drücken, fertig. Hotplug inklusive.</figcaption>
-		</figure>
-		<figure>
-			<img src="img/timer.png" alt="3-Spieler-Modus mit grossem Race-Timer in der freien Bildschirmecke">
-			<figcaption>Bei drei Spielern wird die freie Ecke zum grossen Race-Timer.</figcaption>
-		</figure>
+		<figure><img src="img/launcher.png" alt="Launcher screen with ROM selection and player count" loading="lazy">
+		<figcaption>The launcher: pick a ROM per player, set the player count, enter names.</figcaption></figure>
+		<figure><img src="img/menu.png" alt="Settings menu with per-player names, volume and countdown timer" loading="lazy">
+		<figcaption>In-game settings: names, per-player volume, timer modes, save states.</figcaption></figure>
+		<figure><img src="img/pads.png" alt="Controller assignment page with two detected Switch Pro Controllers" loading="lazy">
+		<figcaption>Assign controllers: pick a player, press a button on the pad. Done.</figcaption></figure>
+		<figure><img src="img/timer.png" alt="Three-player mode with a big race timer in the free quadrant" loading="lazy">
+		<figcaption>With three players, the free quadrant becomes a big race timer.</figcaption></figure>
 	</div>
-</section>
+</div></section>
 
-<section class="wrap">
-	<h2>// FEATURES</h2>
-	<div class="features">
-		<div class="card"><h3><em>🕹</em>1–4 Spieler, ein Bildschirm</h3>
-		<p>Splitscreen im 2x2-Raster, framegenau synchron. Controller einfach einstecken —
-		Xbox, PlayStation, Switch Pro, 8BitDo — oder per Menü zuweisen.</p></div>
-		<div class="card"><h3><em>🔗</em>Link-Kabel inklusive</h3>
-		<p>Alle Instanzen hängen am emulierten 4-Spieler-Link-Kabel (mGBA-Lockstep).
-		Pokémon tauschen und kämpfen funktioniert wie am echten Gerät.</p></div>
-		<div class="card"><h3><em>⏱</em>Race-Modus</h3>
-		<p>Ein Hotkey startet alle Spiele synchron neu, dazu Stoppuhr oder Countdown
-		gross im Bild — wer ist nach 30 Minuten am weitesten?</p></div>
-		<div class="card"><h3><em>⏩</em>Tempo 1x–4x</h3>
-		<p>Ein Tastendruck beschleunigt alle Spiele gleichzeitig — Grind-Phasen
-		werden erträglich, und niemand kann heimlich vorspulen.</p></div>
-		<div class="card"><h3><em>💾</em>Savestates für alle</h3>
-		<p>Ein Druck auf F5 sichert alle vier Spielstände gleichzeitig,
-		F9 lädt sie wieder — auch über das Menü erreichbar.</p></div>
-		<div class="card"><h3><em>🔊</em>Sound pro Spieler</h3>
-		<p>Eigener Lautstärkeregler für jeden Bildschirm, plus globales
-		Stummschalten. Alle Einstellungen werden gespeichert.</p></div>
+<section id="link"><div class="wrap">
+	<h2>How the link cable works</h2>
+	<p class="lead">It behaves exactly like the real 4-player adapter — including its one golden rule.</p>
+	<div class="rules"><ul>
+		<li><strong>Player 1 must take part in every trade or battle.</strong> Just like the
+		"parent" unit on real hardware, only player 1 clocks the bus. The HUD shows live
+		who is in link mode and warns when player 1 is missing.</li>
+		<li>Both players walk into the in-game <strong>Cable Club</strong> (upstairs in any
+		Pokémon Center) at the same time.</li>
+		<li>Switch to <strong>1x speed</strong> for trades; the cleanest setup is launching
+		just the two participants.</li>
+		<li>Generation-3 rules still apply: FireRed/LeafGreen need the National Dex
+		to trade with Ruby/Sapphire/Emerald.</li>
+	</ul></div>
+</div></section>
+
+<section id="get-started"><div class="wrap">
+	<div class="aurora two"></div>
+	<h2>Get started in three steps</h2>
+	<p class="lead">No dependencies, no setup wizard. Download, drop your ROMs, play.</p>
+	<div class="steps">
+		<div class="step"><div class="num">STEP 1</div><h3>Download &amp; install</h3>
+		<p>Grab the <a href="https://github.com/JosipFX/splitgba/releases/latest">latest release</a>
+		for your platform. On macOS: right-click → Open on first launch (unsigned open-source app).</p></div>
+		<div class="step"><div class="num">STEP 2</div><h3>Add your games</h3>
+		<p>Put <code>.gba</code> files dumped from your own cartridges into a
+		<code>roms/</code> folder or <code>SplitGBA/</code> in your home directory.</p></div>
+		<div class="step"><div class="num">STEP 3</div><h3>Press start</h3>
+		<p>The launcher opens automatically: pick games, set the player count,
+		plug in controllers, go. <code>F</code> for fullscreen on the TV.</p></div>
 	</div>
-</section>
+	<pre class="code"><span class="c"># prefer building from source?</span>
+git clone --recursive https://github.com/JosipFX/splitgba.git
+cd splitgba
+./build.sh
+<span class="g">./build/splitgba</span>   <span class="c"># opens the launcher</span></pre>
+</div></section>
 
-<section class="wrap">
-	<h2>// TAUSCHEN &amp; KÄMPFEN — SO KLAPPT ES</h2>
-	<div class="rules">
-		<ul>
-			<li><strong>Spieler 1 muss immer teilnehmen.</strong> Wie am echten Kabel taktet nur
-			das erste Gerät die Verbindung. Das HUD zeigt live, wer im Link-Modus ist,
-			und warnt, wenn Spieler 1 fehlt.</li>
-			<li>Beide Spieler gehen im Spiel in den <strong>Kabelclub</strong> (obere Etage im
-			Pokémon-Center) — genau wie auf echter Hardware.</li>
-			<li>Fürs Tauschen aufs <strong>Tempo 1x</strong> schalten, und am saubersten nur
-			die zwei Beteiligten starten.</li>
-			<li>Gen-3-Regeln gelten weiter: Feuerrot/Blattgrün brauchen den Nationaldex
-			für den Tausch mit Rubin/Saphir/Smaragd.</li>
-		</ul>
-	</div>
-</section>
+<section><div class="wrap">
+	<h2>Legal</h2>
+	<p class="legal">SplitGBA ships no games and downloads none. Use only ROM files dumped from
+	cartridges you own (e.g. with a GB&nbsp;Operator). Nintendo, Game Boy Advance and Pokémon
+	are trademarks of their respective owners; this project is not affiliated with or endorsed
+	by them. A generator for free test ROMs is included, and homebrew like Anguna is freely
+	available for trying things out.</p>
+</div></section>
 
-<section class="wrap">
-	<h2>// RECHTLICHES</h2>
-	<p class="legal">SplitGBA enthält keine Spiele und lädt keine herunter. Verwendet
-	ausschliesslich ROM-Dateien, die ihr von euren eigenen Modulen gesichert habt
-	(z.&nbsp;B. mit einem GB&nbsp;Operator). Nintendo, Game Boy Advance und Pokémon sind Marken
-	ihrer jeweiligen Inhaber; dieses Projekt steht in keiner Verbindung zu ihnen.
-	Zum Ausprobieren ohne Spiele liegt dem Projekt ein Generator für freie
-	Test-ROMs bei, und Homebrew wie Anguna ist gratis erhältlich.</p>
-</section>
-
-<footer>
-	<div class="wrap">
-		<a href="https://github.com/JosipFX/splitgba">github.com/JosipFX/splitgba</a> ·
-		Eigener Code <a href="https://github.com/JosipFX/splitgba/blob/main/LICENSE">MIT-lizenziert</a> ·
-		baut auf dem grossartigen <a href="https://mgba.io">mGBA</a>-Core (MPL-2.0) auf ·
-		100% Open Source
-	</div>
-</footer>
+<footer><div class="wrap">
+	<a href="https://github.com/JosipFX/splitgba">github.com/JosipFX/splitgba</a> ·
+	<a href="https://github.com/JosipFX/splitgba/blob/main/LICENSE">MIT licensed</a> ·
+	built on the excellent <a href="https://mgba.io">mGBA</a> core (MPL-2.0) ·
+	100% open source
+</div></footer>
 
 </body>
 </html>
