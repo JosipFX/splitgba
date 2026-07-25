@@ -101,6 +101,7 @@ struct App {
 
 	bool paused = false;
 	bool timerWasRunning = false;
+	bool recording = false;  // Demo-Aufnahme aktiv (MUTED-Anzeige unterdruecken)
 
 	// Race-Timer
 	std::atomic<bool> timerRunning{false};
@@ -777,11 +778,53 @@ static void removeController(SDL_JoystickID id) {
 	}
 }
 
+// Eingabe-Script fuer Demo-Aufnahmen: Zeilen "frame spieler maske" setzen die
+// GBA-Tasten eines Spielers ab dem angegebenen Video-Frame (Maske 0 = loslassen).
+struct ScriptEvent {
+	uint64_t frame;
+	uint16_t mask;
+};
+static std::vector<ScriptEvent> g_script[MAX_PLAYERS];
+static size_t g_scriptPos[MAX_PLAYERS];
+static uint16_t g_scriptKeys[MAX_PLAYERS];
+static uint64_t g_videoFrame = 0;
+
+static void loadScript(const std::string& path) {
+	FILE* f = fopen(path.c_str(), "r");
+	if (!f) {
+		fprintf(stderr, "Script nicht lesbar: %s\n", path.c_str());
+		return;
+	}
+	unsigned long long frame;
+	int player, mask;
+	while (fscanf(f, "%llu %d %i", &frame, &player, &mask) == 3) {
+		if (player >= 1 && player <= MAX_PLAYERS) {
+			g_script[player - 1].push_back({frame, (uint16_t)mask});
+		}
+	}
+	fclose(f);
+	for (int i = 0; i < MAX_PLAYERS; ++i) {
+		std::sort(g_script[i].begin(), g_script[i].end(),
+		          [](const ScriptEvent& a, const ScriptEvent& b) { return a.frame < b.frame; });
+	}
+}
+
+static void advanceScript() {
+	for (int i = 0; i < MAX_PLAYERS; ++i) {
+		while (g_scriptPos[i] < g_script[i].size() &&
+		       g_script[i][g_scriptPos[i]].frame <= g_videoFrame) {
+			g_scriptKeys[i] = g_script[i][g_scriptPos[i]].mask;
+			++g_scriptPos[i];
+		}
+	}
+}
+
 static void pushInput() {
+	advanceScript();
 	for (int i = 0; i < g_app.numPlayers; ++i) {
 		Player& p = g_players[i];
 		updatePadKeys(p);
-		uint16_t keys = p.padKeys;
+		uint16_t keys = p.padKeys | g_scriptKeys[i];
 		if (i == 0) {
 			keys |= g_app.keyboardKeys;
 		}
@@ -1354,7 +1397,7 @@ static std::string hudLine() {
 			hudAppend(line, tr(S_HUD_P1_JOIN));
 		}
 	}
-	if (g_app.masterMute.load()) {
+	if (g_app.masterMute.load() && !g_app.recording) {
 		hudAppend(line, tr(S_MUTED));
 	}
 	if (g_app.paused && !g_app.menuOpen) {
@@ -2029,6 +2072,10 @@ struct Args {
 	int speed = 0;  // 0 = nicht per CLI gesetzt (dann gilt die gespeicherte Einstellung)
 	bool listPads = false;
 	bool showMenu = false;  // Debug: Menue im Screenshot-Modus rendern
+	// Demo-Aufnahme: Frames als RGB24-Rohstrom sichern, Eingaben aus Script-Datei
+	std::string recordPath;
+	int recordSeconds = 20;
+	std::string scriptPath;
 	int exitAfterSec = 0;  // Debug: nach N Sekunden automatisch beenden
 	std::string screenshotPath;
 	int screenshotFrames = 240;
@@ -2095,6 +2142,12 @@ static bool parseArgs(int argc, char** argv, Args& args) {
 			args.speed = std::clamp(atoi(argv[++i]), 1, 4);
 		} else if (a == "--exit-after" && i + 1 < argc) {
 			args.exitAfterSec = std::max(0, atoi(argv[++i]));
+		} else if (a == "--record" && i + 1 < argc) {
+			args.recordPath = argv[++i];
+		} else if (a == "--record-seconds" && i + 1 < argc) {
+			args.recordSeconds = std::clamp(atoi(argv[++i]), 1, 120);
+		} else if (a == "--script" && i + 1 < argc) {
+			args.scriptPath = argv[++i];
 		} else if (a == "--screenshot" && i + 1 < argc) {
 			args.screenshotPath = argv[++i];
 		} else if (a == "--frames" && i + 1 < argc) {
@@ -2296,15 +2349,27 @@ int main(int argc, char** argv) {
 	// Community-Mappings laden, falls vorhanden (mehr Controller-Modelle)
 	SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
 
-	bool hiddenUi = screenshotMode || getenv("SPLITGBA_LAUNCHER_SHOT") != nullptr;
-	uint32_t winFlags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+	bool recording = !args.recordPath.empty();
+	if (recording) {
+		g_app.recording = true;
+		g_app.masterMute.store(true);  // Audio taktet weiter, bleibt aber stumm
+	}
+	if (!args.scriptPath.empty()) {
+		loadScript(args.scriptPath);
+	}
+	bool hiddenUi =
+	    screenshotMode || recording || getenv("SPLITGBA_LAUNCHER_SHOT") != nullptr;
+	uint32_t winFlags = SDL_WINDOW_RESIZABLE;
+	if (!recording) {
+		winFlags |= SDL_WINDOW_ALLOW_HIGHDPI;  // bei Aufnahme: exakt 1280x720 Pixel
+	}
 	if (hiddenUi) {
 		winFlags |= SDL_WINDOW_HIDDEN;
 	} else if (args.fullscreen) {
 		winFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 	}
 	g_app.window = SDL_CreateWindow("SplitGBA", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-	                                1600, 900, winFlags);
+	                                recording ? 1280 : 1600, recording ? 720 : 900, winFlags);
 	if (!g_app.window) {
 		fprintf(stderr, "Fenster konnte nicht erstellt werden: %s\n", SDL_GetError());
 		return 1;
@@ -2438,6 +2503,24 @@ int main(int argc, char** argv) {
 	bool quit = false;
 	uint64_t exitDeadline =
 	    args.exitAfterSec ? SDL_GetTicks64() + (uint64_t)args.exitAfterSec * 1000 : 0;
+	uint64_t recordFrames = (uint64_t)args.recordSeconds * 60;
+	uint64_t tickStep = SDL_GetPerformanceFrequency() / 60;
+	uint64_t nextTick = SDL_GetPerformanceCounter();
+	FILE* recFile = nullptr;
+	std::vector<uint8_t> recBuf;
+	int recW = 0, recH = 0;
+	if (recording) {
+		recFile = fopen(args.recordPath.c_str(), "wb");
+		if (!recFile) {
+			fprintf(stderr, "Aufnahmedatei nicht schreibbar: %s\n", args.recordPath.c_str());
+			recording = false;
+		} else {
+			SDL_GetRendererOutputSize(g_app.renderer, &recW, &recH);
+			recBuf.resize((size_t)recW * recH * 3);
+			printf("Aufnahme: %dx%d, %d Sekunden -> %s\n", recW, recH, args.recordSeconds,
+			       args.recordPath.c_str());
+		}
+	}
 	while (!quit) {
 		if (exitDeadline && SDL_GetTicks64() >= exitDeadline) {
 			quit = true;
@@ -2495,9 +2578,44 @@ int main(int argc, char** argv) {
 		SDL_GetRendererOutputSize(g_app.renderer, &outW, &outH);
 		renderFrame(outW, outH);
 		SDL_RenderPresent(g_app.renderer);
+
+		if (recording) {
+			// Zeitstempel-basiert: an jeder 1/60-s-Grenze genau ein Frame in den
+			// Rohstrom (Duplikate beim Aufholen sind ok, die Spiele laufen echtzeit)
+			uint64_t now = SDL_GetPerformanceCounter();
+			bool captured = false;
+			while (now >= nextTick && g_videoFrame < recordFrames) {
+				if (!captured) {
+					SDL_RenderReadPixels(g_app.renderer, nullptr, SDL_PIXELFORMAT_RGB24,
+					                     recBuf.data(), recW * 3);
+					captured = true;
+				}
+				fwrite(recBuf.data(), 1, recBuf.size(), recFile);
+				g_videoFrame++;
+				nextTick += tickStep;
+			}
+			if (g_videoFrame >= recordFrames) {
+				quit = true;
+			}
+		} else {
+			g_videoFrame++;
+		}
+	}
+	if (recFile) {
+		fclose(recFile);
 	}
 
 	saveSettings();
+	if (getenv("SPLITGBA_DEBUG_SYNC")) {
+		printf("DEBUG audioOk=%d freq=%d samples=%d fmt=%d\n", g_app.audioOk,
+		       g_app.audioSpec.freq, g_app.audioSpec.samples, (int)g_app.audioSpec.format);
+		for (int i = 0; i < g_app.numPlayers; ++i) {
+			printf("DEBUG P%d audioWait=%d videoWait=%d fpsTarget=%g\n", i + 1,
+			       g_players[i].thread.impl->sync.audioWait,
+			       g_players[i].thread.impl->sync.videoFrameWait,
+			       g_players[i].thread.impl->sync.fpsTarget);
+		}
+	}
 	for (int i = 0; i < g_app.numPlayers; ++i) {
 		printf("Spieler %d: %llu Frames emuliert\n", i + 1,
 		       (unsigned long long)g_players[i].frameCount.load());
