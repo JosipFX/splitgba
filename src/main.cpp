@@ -40,6 +40,7 @@
 namespace fs = std::filesystem;
 
 #include "font5x7.h"
+#include "lang.h"
 
 static_assert(sizeof(color_t) == 4, "libmgba muss ohne COLOR_16_BIT gebaut sein");
 
@@ -107,6 +108,7 @@ struct App {
 	uint64_t timerStartTick = 0;
 
 	// Einstellungen (Menue, persistiert in ~/.config/splitgba.ini)
+	std::atomic<int> lang{0};  // 0 = Englisch (Standard), 1 = Deutsch
 	std::string playerName[MAX_PLAYERS];
 	std::atomic<int> playerVol[MAX_PLAYERS] = {100, 100, 100, 100};  // Prozent, 0-150
 	std::atomic<bool> masterMute{false};
@@ -148,6 +150,17 @@ struct App {
 
 static App g_app;
 static Player g_players[MAX_PLAYERS];
+
+// Uebersetzter UI-Text in der aktiven Sprache
+static const char* tr(Str s) {
+	return (g_app.lang.load() == 1 ? STR_DE : STR_EN)[s];
+}
+
+static std::string trFmt(Str s, int n) {
+	char buf[80];
+	snprintf(buf, sizeof(buf), tr(s), n);
+	return buf;
+}
 
 // ---------------------------------------------------------------------------
 // Logging: mGBA-Meldungen nur bei Fehlern durchreichen
@@ -853,6 +866,8 @@ static void loadSettings() {
 			g_app.masterMute.store(atoi(val.c_str()) != 0);
 		} else if (key == "players") {
 			g_app.savedPlayers = std::clamp(atoi(val.c_str()), 0, MAX_PLAYERS);
+		} else if (key == "lang") {
+			g_app.lang.store(val == "de" ? 1 : 0);
 		}
 		for (int i = 0; i < MAX_PLAYERS; ++i) {
 			if (key == "rom" + std::to_string(i + 1)) {
@@ -882,6 +897,7 @@ static void saveSettings() {
 	fprintf(f, "hud=%d\n", g_app.hudVisible ? 1 : 0);
 	fprintf(f, "smooth=%d\n", g_app.smooth ? 1 : 0);
 	fprintf(f, "mute=%d\n", g_app.masterMute.load() ? 1 : 0);
+	fprintf(f, "lang=%s\n", g_app.lang.load() == 1 ? "de" : "en");
 	fclose(f);
 }
 
@@ -892,7 +908,7 @@ enum MenuId {
 	MI_NAME0 = 0, MI_NAME1, MI_NAME2, MI_NAME3,
 	MI_VOL0, MI_VOL1, MI_VOL2, MI_VOL3,
 	MI_SPEED, MI_TIMERMODE, MI_COUNTDOWN,
-	MI_MUTE, MI_HUD, MI_SMOOTH, MI_FULLSCREEN,
+	MI_MUTE, MI_HUD, MI_SMOOTH, MI_FULLSCREEN, MI_LANGUAGE,
 	MI_SAVESTATE, MI_LOADSTATE, MI_LINKINFO, MI_PADS,
 	MI_CONTROLS, MI_CLOSE, MI_QUIT,
 };
@@ -950,6 +966,7 @@ static std::vector<int> menuItems() {
 	items.push_back(MI_HUD);
 	items.push_back(MI_SMOOTH);
 	items.push_back(MI_FULLSCREEN);
+	items.push_back(MI_LANGUAGE);
 	items.push_back(MI_SAVESTATE);
 	items.push_back(MI_LOADSTATE);
 	items.push_back(MI_LINKINFO);
@@ -1019,6 +1036,8 @@ static void menuAdjust(int id, int dir, bool* quit) {
 		}
 		idx = std::clamp(idx + dir, 0, n - 1);
 		g_app.countdownMin.store(COUNTDOWN_STEPS[idx]);
+	} else if (id == MI_LANGUAGE) {
+		g_app.lang.store(g_app.lang.load() == 0 ? 1 : 0);
 	} else if (id == MI_MUTE) {
 		g_app.masterMute.store(!g_app.masterMute.load());
 	} else if (id == MI_HUD) {
@@ -1040,10 +1059,10 @@ static void menuActivate(int id, bool* quit) {
 		SDL_StartTextInput();
 	} else if (id == MI_SAVESTATE) {
 		saveAllStates();
-		setMenuStatus("SAVESTATES GESPEICHERT");
+		setMenuStatus(tr(S_STATES_SAVED));
 	} else if (id == MI_LOADSTATE) {
 		loadAllStates();
-		setMenuStatus("SAVESTATES GELADEN");
+		setMenuStatus(tr(S_STATES_LOADED));
 	} else if (id == MI_PADS) {
 		g_app.padAssignOpen = true;
 		g_app.padAssignSel = 0;
@@ -1322,7 +1341,7 @@ static std::string hudLine() {
 	if (g_app.timerMode.load() != 0) {
 		hudAppend(line, formatTimer(displayTimerMs()));
 		if (countdownExpired()) {
-			hudAppend(line, "ZEIT!");
+			hudAppend(line, tr(S_HUD_TIME_UP));
 		}
 	}
 	char speed[16];
@@ -1332,14 +1351,14 @@ static std::string hudLine() {
 		std::string active = linkPlayersInSio();
 		hudAppend(line, active.empty() ? "LINK" : "LINK " + active);
 		if (linkNeedsMaster()) {
-			hudAppend(line, "! P1 MUSS MITMACHEN !");
+			hudAppend(line, tr(S_HUD_P1_JOIN));
 		}
 	}
 	if (g_app.masterMute.load()) {
-		hudAppend(line, "STUMM");
+		hudAppend(line, tr(S_MUTED));
 	}
 	if (g_app.paused && !g_app.menuOpen) {
-		hudAppend(line, "PAUSE");
+		hudAppend(line, tr(S_HUD_PAUSE));
 	}
 	return line;
 }
@@ -1348,7 +1367,7 @@ static std::string hudLine() {
 static void menuItemText(int id, std::string& label, std::string& value) {
 	if (id >= MI_NAME0 && id <= MI_NAME3) {
 		int i = id - MI_NAME0;
-		label = "NAME SPIELER " + std::to_string(i + 1);
+		label = trFmt(S_PLAYER_NAME_FMT, i + 1);
 		if (g_app.editingName && g_app.editingIndex == i) {
 			value = g_app.editBuffer + ((SDL_GetTicks64() / 400) % 2 ? "_" : " ");
 		} else {
@@ -1356,63 +1375,66 @@ static void menuItemText(int id, std::string& label, std::string& value) {
 		}
 	} else if (id >= MI_VOL0 && id <= MI_VOL3) {
 		int i = id - MI_VOL0;
-		label = "LAUTSTAERKE P" + std::to_string(i + 1);
-		value = std::to_string(g_app.playerVol[i].load()) + " PROZENT";
+		label = trFmt(S_VOLUME_FMT, i + 1);
+		value = std::to_string(g_app.playerVol[i].load()) + "%";
 	} else if (id == MI_SPEED) {
-		label = "TEMPO";
+		label = tr(S_SPEED);
 		value = std::to_string(g_app.speedIdx.load() + 1) + "X";
 	} else if (id == MI_TIMERMODE) {
-		label = "TIMER";
+		label = tr(S_TIMER);
 		int m = g_app.timerMode.load();
-		value = m == 0 ? "AUS" : (m == 1 ? "STOPPUHR" : "COUNTDOWN");
+		value = tr(m == 0 ? S_TIMER_OFF : (m == 1 ? S_TIMER_STOPWATCH : S_TIMER_COUNTDOWN));
 	} else if (id == MI_COUNTDOWN) {
-		label = "COUNTDOWN-DAUER";
+		label = tr(S_COUNTDOWN_LEN);
 		value = std::to_string(g_app.countdownMin.load()) + " MIN";
 	} else if (id == MI_MUTE) {
-		label = "TON";
-		value = g_app.masterMute.load() ? "STUMM" : "AN";
+		label = tr(S_AUDIO);
+		value = tr(g_app.masterMute.load() ? S_MUTED : S_ON);
 	} else if (id == MI_HUD) {
-		label = "ANZEIGEN (HUD)";
-		value = g_app.hudVisible ? "AN" : "AUS";
+		label = tr(S_HUD_ITEM);
+		value = tr(g_app.hudVisible ? S_ON : S_OFF);
 	} else if (id == MI_SMOOTH) {
-		label = "GLAETTUNG";
-		value = g_app.smooth ? "AN" : "AUS";
+		label = tr(S_SMOOTHING);
+		value = tr(g_app.smooth ? S_ON : S_OFF);
 	} else if (id == MI_FULLSCREEN) {
-		label = "VOLLBILD";
-		value = g_app.fullscreen ? "AN" : "AUS";
+		label = tr(S_FULLSCREEN);
+		value = tr(g_app.fullscreen ? S_ON : S_OFF);
+	} else if (id == MI_LANGUAGE) {
+		label = tr(S_LANGUAGE);
+		value = tr(S_LANG_VALUE);
 	} else if (id == MI_SAVESTATE) {
-		label = "SAVESTATE SPEICHERN";
+		label = tr(S_SAVE_STATE);
 		value = "(F5)";
 	} else if (id == MI_LOADSTATE) {
-		label = "SAVESTATE LADEN";
+		label = tr(S_LOAD_STATE);
 		value = "(F9)";
 	} else if (id == MI_LINKINFO) {
-		label = "LINK";
+		label = tr(S_LINK);
 		if (!g_app.linkEnabled) {
-			value = "AUS (--no-link)";
+			value = tr(S_LINK_OFF_FLAG);
 		} else if (!g_app.linked) {
-			value = "AUS (NUR 1 SPIELER)";
+			value = tr(S_LINK_OFF_SINGLE);
 		} else {
 			std::string active = linkPlayersInSio();
 			if (active.empty()) {
-				value = "BEREIT (" + std::to_string(g_app.numPlayers) + " VERBUNDEN)";
+				value = trFmt(S_LINK_READY_FMT, g_app.numPlayers);
 			} else if (linkNeedsMaster()) {
-				value = active + " AKTIV - P1 MUSS MITMACHEN!";
+				value = active + tr(S_LINK_P1_SUFFIX);
 			} else {
-				value = active + " IM LINK-MODUS";
+				value = active + tr(S_LINK_ACTIVE_SUFFIX);
 			}
 		}
 	} else if (id == MI_PADS) {
-		label = "CONTROLLER ZUWEISEN";
+		label = tr(S_ASSIGN_PADS);
 		value = "";
 	} else if (id == MI_CONTROLS) {
-		label = "STEUERUNG ANZEIGEN";
+		label = tr(S_SHOW_CONTROLS);
 		value = "";
 	} else if (id == MI_CLOSE) {
-		label = "SCHLIESSEN";
+		label = tr(S_CLOSE);
 		value = "";
 	} else if (id == MI_QUIT) {
-		label = "SPLITGBA BEENDEN";
+		label = tr(S_QUIT_APP);
 		value = "";
 	}
 }
@@ -1438,7 +1460,7 @@ static void drawMenu(int outW, int outH) {
 	SDL_Rect frame = {px, py, panelW, panelH};
 	SDL_RenderDrawRect(g_app.renderer, &frame);
 
-	std::string title = "EINSTELLUNGEN";
+	std::string title = tr(S_SETTINGS);
 	drawText(title, px + (panelW - textWidth(title, scale)) / 2, py + rowH / 2, scale,
 	         120, 200, 255);
 
@@ -1464,9 +1486,7 @@ static void drawMenu(int outW, int outH) {
 		drawText(g_app.menuStatus, px + (panelW - textWidth(g_app.menuStatus, hs)) / 2,
 		         py + panelH - rowH + 2 * scale, hs, 120, 220, 120);
 	} else {
-		std::string hint = g_app.editingName
-		    ? "TIPPEN: NAME  ENTER: OK  ESC: ABBRECHEN"
-		    : "PFEILE: WAEHLEN/AENDERN  ENTER: OK  ESC: SCHLIESSEN";
+		std::string hint = tr(g_app.editingName ? S_MENU_HINT_EDIT : S_MENU_HINT);
 		drawText(hint, px + (panelW - textWidth(hint, hs)) / 2, py + panelH - rowH + 2 * scale,
 		         hs, 150, 150, 160);
 	}
@@ -1488,7 +1508,7 @@ static void drawPadAssign(int outW, int outH) {
 	SDL_Rect frame = {px, py, panelW, panelH};
 	SDL_RenderDrawRect(g_app.renderer, &frame);
 
-	std::string title = "CONTROLLER ZUWEISEN";
+	std::string title = tr(S_PADS_TITLE);
 	drawText(title, px + (panelW - textWidth(title, scale)) / 2, py + rowH / 2, scale,
 	         120, 200, 255);
 
@@ -1514,7 +1534,7 @@ static void drawPadAssign(int outW, int outH) {
 				padName.resize(26);
 			}
 		} else {
-			padName = i == 0 ? "TASTATUR" : "KEIN CONTROLLER";
+			padName = tr(i == 0 ? S_KEYBOARD : S_NO_CONTROLLER);
 		}
 		drawText(padName, px + 20 * scale + 16 * splitfont::ADVANCE * scale, y, scale,
 		         g_players[i].pad ? 120 : r, g_players[i].pad ? 220 : g,
@@ -1523,9 +1543,9 @@ static void drawPadAssign(int outW, int outH) {
 	}
 
 	int hs = std::max(1, scale - 1);
-	std::string hint1 = "PFEILE: SPIELER WAEHLEN";
-	std::string hint2 = "KNOPF AUF DEM CONTROLLER = DIESEM SPIELER ZUWEISEN";
-	std::string hint3 = "ESC/ENTER: FERTIG";
+	std::string hint1 = tr(S_PADS_HINT1);
+	std::string hint2 = tr(S_PADS_HINT2);
+	std::string hint3 = tr(S_PADS_HINT3);
 	drawText(hint1, px + (panelW - textWidth(hint1, hs)) / 2, y + rowH / 2, hs, 150, 150, 160);
 	drawText(hint2, px + (panelW - textWidth(hint2, hs)) / 2, y + rowH / 2 + rowH, hs,
 	         150, 150, 160);
@@ -1537,34 +1557,9 @@ static void drawPadAssign(int outW, int outH) {
 // Steuerungs-Uebersicht (aus Menue und Startmenue aufrufbar)
 
 static void drawHelp(int outW, int outH) {
-	static const char* LINES[] = {
-		"STEUERUNG",
-		"",
-		"SPIELER 1 - TASTATUR:",
-		"  PFEILTASTEN   STEUERKREUZ",
-		"  X             A-KNOPF",
-		"  Z ODER Y      B-KNOPF",
-		"  A / S         L / R",
-		"  ENTER         START",
-		"  BACKSPACE     SELECT",
-		"",
-		"CONTROLLER (ALLE SPIELER):",
-		"  A/B WIE BESCHRIFTET, SCHULTERTASTEN L/R,",
-		"  START = START, SELECT/BACK = SELECT",
-		"",
-		"POKEMON TAUSCHEN/KAEMPFEN:",
-		"  SPIELER 1 MUSS IMMER MITMACHEN (BUS-MASTER),",
-		"  TEMPO 1X, BEIDE GLEICHZEITIG IN DEN KABELCLUB",
-		"",
-		"HOTKEYS:",
-		"  ESC MENUE    1-4 TEMPO    TAB TURBO (HALTEN)",
-		"  LEERTASTE TIMER    R TIMER-RESET",
-		"  SHIFT+R RACE-START    P PAUSE    M STUMM",
-		"  F VOLLBILD    H HUD    F5/F9 SAVESTATE",
-		"",
-		"BELIEBIGE TASTE SCHLIESST DIESE ANSICHT",
-	};
-	int count = (int)(sizeof(LINES) / sizeof(LINES[0]));
+	const char* const* LINES = g_app.lang.load() == 1 ? HELP_DE : HELP_EN;
+	static_assert(sizeof(HELP_EN) == sizeof(HELP_DE), "Hilfeseiten muessen gleich lang sein");
+	int count = (int)(sizeof(HELP_EN) / sizeof(HELP_EN[0]));
 	int scale = std::max(2, outH / 500);
 	int rowH = (splitfont::GLYPH_H + 4) * scale;
 	int panelW = 48 * splitfont::ADVANCE * scale;
@@ -1722,7 +1717,7 @@ static void drawLauncher(int outW, int outH) {
 	std::string title = "SPLITGBA";
 	drawText(title, (outW - textWidth(title, titleScale)) / 2, outH / 12, titleScale,
 	         120, 200, 255);
-	std::string sub = "4-SPIELER SPLITSCREEN + LINK-KABEL";
+	std::string sub = tr(S_LAUNCH_SUB);
 	int subScale = std::max(1, titleScale / 4);
 	drawText(sub, (outW - textWidth(sub, subScale)) / 2,
 	         outH / 12 + (splitfont::GLYPH_H + 4) * titleScale, subScale, 150, 150, 160);
@@ -1739,10 +1734,9 @@ static void drawLauncher(int outW, int outH) {
 	int y = outH / 3;
 
 	if (g_app.romList.empty()) {
-		std::string msg = "KEINE ROMS GEFUNDEN";
+		std::string msg = tr(S_NO_ROMS);
 		drawText(msg, (outW - textWidth(msg, scale)) / 2, y, scale, 255, 120, 120);
-		std::string msg2 = "LEGE .GBA-DATEIEN IN DEN ORDNER roms/ ODER " +
-		                   std::string("SplitGBA/ IM BENUTZERORDNER");
+		std::string msg2 = tr(S_NO_ROMS_HINT);
 		drawText(msg2, (outW - textWidth(msg2, scale)) / 2, y + rowH, scale, 210, 210, 215);
 		y += rowH * 3;
 	}
@@ -1757,7 +1751,7 @@ static void drawLauncher(int outW, int outH) {
 		}
 		int tx = px + 4 * splitfont::ADVANCE * scale;
 		if (row == LR_PLAYERS) {
-			drawText("SPIELER", tx, y, scale, r, g, b);
+			drawText(tr(S_PLAYERS), tx, y, scale, r, g, b);
 			std::string v = "< " + std::to_string(g_app.launcherPlayers) + " >";
 			drawText(v, tx + 20 * splitfont::ADVANCE * scale, y, scale, r, g, b);
 		} else if (row >= LR_P0 && row <= LR_P3) {
@@ -1773,23 +1767,22 @@ static void drawLauncher(int outW, int outH) {
 			}
 			drawText(name, tx + 27 * splitfont::ADVANCE * scale, y, scale, r, g, b);
 			if (g_players[i].pad) {
-				drawText("PAD OK", tx + 40 * splitfont::ADVANCE * scale, y, scale, 120, 200, 120);
+				drawText(tr(S_PAD_OK), tx + 40 * splitfont::ADVANCE * scale, y, scale,
+				         120, 200, 120);
 			}
 		} else if (row == LR_START) {
-			drawText("STARTEN", tx, y, scale, r, g, b);
+			drawText(tr(S_START), tx, y, scale, r, g, b);
 		} else if (row == LR_PADS) {
-			drawText("CONTROLLER ZUWEISEN", tx, y, scale, r, g, b);
+			drawText(tr(S_ASSIGN_PADS), tx, y, scale, r, g, b);
 		} else if (row == LR_CONTROLS) {
-			drawText("STEUERUNG", tx, y, scale, r, g, b);
+			drawText(tr(S_SHOW_CONTROLS), tx, y, scale, r, g, b);
 		} else if (row == LR_QUIT) {
-			drawText("BEENDEN", tx, y, scale, r, g, b);
+			drawText(tr(S_QUIT), tx, y, scale, r, g, b);
 		}
 		y += rowH;
 	}
 
-	std::string hint = g_app.editingName
-	    ? "TIPPEN: NAME  ENTER: OK  ESC: ABBRECHEN"
-	    : "PFEILE: WAEHLEN/AENDERN  ENTER: OK/NAME  START-KNOPF: LOSLEGEN";
+	std::string hint = tr(g_app.editingName ? S_MENU_HINT_EDIT : S_LAUNCH_HINT);
 	int hs = std::max(1, scale - 1);
 	drawText(hint, (outW - textWidth(hint, hs)) / 2, outH - rowH * 2, hs, 150, 150, 160);
 
@@ -1966,9 +1959,9 @@ static void renderFrame(int outW, int outH) {
 				label += " " + g_app.playerName[i];
 			}
 			label += " - " + p.label;
-			label += p.pad ? " (PAD)" : (i == 0 ? " (TASTATUR)" : " (KEIN PAD)");
+			label += tr(p.pad ? S_LBL_PAD : (i == 0 ? S_LBL_KEYBOARD : S_LBL_NO_PAD));
 			if (mCoreThreadHasCrashed(&p.thread)) {
-				label += " !ABSTURZ!";
+				label += tr(S_LBL_CRASH);
 			}
 			int tw = textWidth(label, labelScale);
 			int tx = lay.cells[i].x + 10;
@@ -2043,24 +2036,25 @@ struct Args {
 };
 
 static void usage(const char* argv0) {
-	printf("SplitGBA — 4-Spieler-Splitscreen-GBA-Emulator mit Link-Kabel\n\n");
-	printf("Aufruf: %s [Optionen] ROM1 [ROM2 ROM3 ROM4]\n", argv0);
-	printf("        %s [Optionen] <Ordner-mit-ROMs>\n", argv0);
-	printf("        %s -n 4 <ROM>            (4x dasselbe Spiel, z.B. fuer Races)\n\n", argv0);
-	printf("Optionen:\n");
-	printf("  -f, --fullscreen   Vollbild starten (fuer den TV)\n");
-	printf("      --smooth       weiche Skalierung statt scharfer Pixel\n");
-	printf("      --no-link      Link-Kabel deaktivieren\n");
-	printf("      --mute         ohne Ton starten\n");
-	printf("  -n <1-4>           ROM mehrfach starten (eigener Spielstand pro Spieler)\n");
-	printf("      --speed <1-4>  Start-Tempo (Standard 1)\n");
-	printf("      --list-pads    erkannte Controller anzeigen und beenden\n");
-	printf("      --screenshot <datei.bmp> [--frames N]   Debug: rendern und beenden\n");
-	printf("  -h, --help         diese Hilfe\n\n");
-	printf("Tasten: Esc Menue (Namen, Timer, Lautstaerke, Beenden), 1-4/F1-F4 Tempo,\n");
-	printf("        Tab Turbo, Leertaste Timer, R Timer-Reset, Shift+R alle neu starten,\n");
-	printf("        P Pause, M stumm, F5/F9 Savestate speichern/laden, F Vollbild, H HUD\n");
-	printf("Spieler 1 Tastatur: Pfeile, X=A, Z/Y=B, A=L, S=R, Enter=Start, Backspace=Select\n");
+	printf("SplitGBA — four-player split-screen GBA emulator with link cable\n\n");
+	printf("Usage: %s [options] ROM1 [ROM2 ROM3 ROM4]\n", argv0);
+	printf("       %s [options] <folder-with-roms>\n", argv0);
+	printf("       %s                        (opens the launcher screen)\n", argv0);
+	printf("       %s -n 4 <ROM>             (4 copies of one game, e.g. for races)\n\n", argv0);
+	printf("Options:\n");
+	printf("  -f, --fullscreen   start fullscreen (for the TV)\n");
+	printf("      --smooth       smooth scaling instead of crisp pixels\n");
+	printf("      --no-link      disable the link cable\n");
+	printf("      --mute         start without audio\n");
+	printf("  -n <1-4>           run one ROM multiple times (separate save per player)\n");
+	printf("      --speed <1-4>  initial speed (default 1)\n");
+	printf("      --list-pads    list detected controllers and exit\n");
+	printf("      --screenshot <file.bmp> [--frames N]   debug: render and exit\n");
+	printf("  -h, --help         this help\n\n");
+	printf("Keys: Esc menu (names, timer, volume, language, quit), 1-4/F1-F4 speed,\n");
+	printf("      Tab turbo, Space timer, R timer reset, Shift+R restart all games,\n");
+	printf("      P pause, M mute, F5/F9 save/load states, F fullscreen, H HUD\n");
+	printf("Player 1 keyboard: arrows, X=A, Z/Y=B, A=L, S=R, Enter=Start, Backspace=Select\n");
 }
 
 static bool collectRomsFromDir(const std::string& dir, std::vector<std::string>& roms) {
