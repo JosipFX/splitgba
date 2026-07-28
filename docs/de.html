@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>SplitEmu · GBA-, NES- &amp; SNES-Multiplayer auf einem Screen</title>
-	<meta name="description" content="Open-Source Splitscreen-Couch-Multiplayer für GBA, NES und SNES. Bis zu vier Spiele auf einem TV – mit gemeinsamem Tempo, Race-Timer, Savestates und Controller-Support.">
+	<meta name="description" content="Open-Source Splitscreen-Couch-Multiplayer für GBA, NES und SNES. Bis zu vier Spiele auf einem TV, mit gemeinsamem Tempo, Race-Timer, Savestates und Controller-Support.">
 	<meta name="theme-color" content="#080b11">
 	<link rel="icon" href="img/splitemu-mark.svg" type="image/svg+xml">
 	<link rel="alternate" hreflang="en" href="index.html">
@@ -12,6 +12,39 @@
 </head>
 <body>
 	<a class="skip-link" href="#main">Zum Inhalt springen</a>
+
+	<svg class="svg-defs" aria-hidden="true" focusable="false">
+		<symbol id="gba-device" viewBox="0 0 180 116">
+			<g fill="#221d44">
+				<rect x="22" y="5" width="30" height="17" rx="7"/>
+				<rect x="128" y="5" width="30" height="17" rx="7"/>
+				<rect x="64" y="7" width="16" height="8" rx="3"/>
+			</g>
+			<path fill="#2e2757" d="M31 12h118c14.36 0 26 11.64 26 26v30c0 22.09-17.91 40-40 40H45C22.91 108 5 90.09 5 68V38c0-14.36 11.64-26 26-26Z"/>
+			<path fill="none" stroke="#8f8ad6" stroke-opacity=".26" stroke-width="1.6" d="M31 12h118c14.36 0 26 11.64 26 26v30c0 22.09-17.91 40-40 40H45C22.91 108 5 90.09 5 68V38c0-14.36 11.64-26 26-26Z"/>
+			<rect x="47" y="24" width="86" height="64" rx="6" fill="#080910"/>
+			<rect x="47.9" y="24.9" width="84.2" height="62.2" rx="5.2" fill="none" stroke="#ffffff" stroke-opacity=".06"/>
+			<rect x="54" y="29" width="72" height="48" rx="1.5" fill="currentColor" fill-opacity=".5"/>
+			<text x="55" y="84" textLength="62" lengthAdjust="spacingAndGlyphs" font-family="Sora, sans-serif" font-size="6.4" font-weight="700" fill="#ffffff" fill-opacity=".3">GAME BOY ADVANCE</text>
+			<circle cx="28" cy="58" r="17" fill="#241f47"/>
+			<g fill="#15162a">
+				<rect x="16.5" y="53" width="23" height="10" rx="3"/>
+				<rect x="23" y="46.5" width="10" height="23" rx="3"/>
+			</g>
+			<g fill="#1a1b32" stroke="#ffffff" stroke-opacity=".1">
+				<circle cx="158" cy="50" r="8"/>
+				<circle cx="143" cy="63" r="8"/>
+			</g>
+			<g fill="#15162a" transform="translate(105 98) rotate(-18)">
+				<rect x="-16" y="-3.5" width="13" height="7" rx="3.5"/>
+				<rect x="1" y="-3.5" width="13" height="7" rx="3.5"/>
+			</g>
+			<circle cx="47" cy="97" r="2.6" fill="#b7f56a"/>
+			<g stroke="#221d44" stroke-width="2.6" stroke-linecap="round">
+				<path d="m142 96 6-9m1 9 6-9m1 9 6-9"/>
+			</g>
+		</symbol>
+	</svg>
 
 	<nav class="site-nav" aria-label="Hauptnavigation">
 		<div class="shell nav-inner">
@@ -25,6 +58,7 @@
 				<a href="#features">Features</a>
 				<a href="#showcase">Einblicke</a>
 				<a href="#link">GBA-Link</a>
+				<a href="#compatibility">Kompatibilität</a>
 				<a href="#start">Loslegen</a>
 				<details class="language">
 					<summary aria-label="Sprache wechseln">
@@ -50,7 +84,7 @@
 						<strong>Neu</strong> Jetzt mit NES &amp; SNES <span aria-hidden="true">→</span>
 					</a>
 					<h1>Vier Spiele.<br><span class="gradient-text">Ein Screen.</span></h1>
-					<p class="hero-lead">Der Open-Source-Emulator für den Spieleabend. GBA, NES und SNES mit bis zu vier Controllern Seite an Seite spielen – lokal, synchron und gemacht für den TV.</p>
+					<p class="hero-lead">Der Open-Source-Emulator für den Spieleabend. GBA, NES und SNES mit bis zu vier Controllern Seite an Seite spielen: lokal, synchron und gemacht für den TV.</p>
 					<div class="system-pills" aria-label="Unterstützte Systeme">
 						<span><i class="system-dot gba"></i>GBA</span>
 						<span><i class="system-dot nes"></i>NES</span>
@@ -69,25 +103,18 @@
 					<p class="platform-note">KEIN ACCOUNT · KEINE CLOUD · DEINE ROMS BLEIBEN LOKAL</p>
 				</div>
 
-				<div class="hero-visual">
-					<div class="signal-line"></div>
-					<div class="float-chip one">4 Instanzen synchron</div>
-					<div class="float-chip two">3 Systeme bereit</div>
-					<div class="window">
-						<div class="window-bar">
-							<div class="window-dots"><i></i><i></i><i></i></div>
-							<span class="window-title">splitemu / live session</span>
-							<span class="live-status">live</span>
-						</div>
-						<video autoplay muted loop playsinline poster="video/poster.jpg">
+				<figure class="hero-visual">
+					<div class="demo-frame">
+						<video class="demo-video" autoplay muted loop playsinline poster="video/poster.jpg">
 							<source src="video/demo.mp4" type="video/mp4">
 						</video>
 					</div>
-				</div>
+					<figcaption class="demo-caption">Aufgezeichnete Session: vier GBA-Spiele, vier Controller, ein Bildschirm.</figcaption>
+				</figure>
 
 				<div class="metrics reveal" aria-label="SplitEmu Highlights">
 					<div class="metric"><strong>3</strong><span>Retro-Systeme</span></div>
-					<div class="metric"><strong>1–4</strong><span>lokale Spieler</span></div>
+					<div class="metric"><strong>1-4</strong><span>lokale Spieler</span></div>
 					<div class="metric"><strong>4×</strong><span>gemeinsames Tempo</span></div>
 					<div class="metric"><strong>100%</strong><span>Open Source</span></div>
 				</div>
@@ -100,34 +127,109 @@
 					<h2>Retro-Multiplayer,<br>ohne Ballast.</h2>
 					<p>GBA-, NES- und SNES-Sessions teilen sich dieselbe fokussierte Oberfläche: jeder Spieler sichtbar, jeder Controller getrennt und alle Spiele unter einem Dach.</p>
 				</div>
-				<div class="feature-grid visual-grid">
+				<div class="feature-grid">
 					<article class="feature-card feature-card-wide reveal">
-						<span class="feature-tag">01 / SYSTEME</span>
-						<div class="feature-visual"><img src="img/features/systems-grid.svg" alt="" loading="lazy"></div>
+						<canvas class="shader-gradient shader-gradient-tile" data-shader="systems" aria-hidden="true"></canvas>
+						<div class="feature-visual">
+							<div class="brandwall" aria-hidden="true">
+								<div class="brandwall-item bw-gba">
+									<svg class="wordmark" viewBox="0 0 210 84">
+										<text class="wm-gba-top" x="105" y="32" text-anchor="middle" textLength="126" lengthAdjust="spacingAndGlyphs">GAME BOY</text>
+										<g transform="translate(11 0) skewX(-9)">
+											<text class="wm-gba-bottom" x="105" y="72" text-anchor="middle" textLength="188" lengthAdjust="spacingAndGlyphs">ADVANCE</text>
+										</g>
+									</svg>
+								</div>
+								<div class="brandwall-item bw-nes">
+									<svg class="wordmark" viewBox="0 0 210 84">
+										<rect class="wm-pill" x="50" y="6" width="110" height="33" rx="16.5"/>
+										<text class="wm-nes-brand" x="105" y="30" text-anchor="middle" textLength="84" lengthAdjust="spacingAndGlyphs">Nintendo</text>
+										<text class="wm-nes-sub" x="105" y="60" text-anchor="middle" textLength="186" lengthAdjust="spacingAndGlyphs">ENTERTAINMENT SYSTEM</text>
+										<rect class="wm-rule" x="12" y="70" width="186" height="4" rx="2"/>
+										<rect class="wm-rule" x="12" y="78" width="186" height="2" rx="1"/>
+									</svg>
+								</div>
+								<div class="brandwall-item bw-snes">
+									<svg class="wordmark" viewBox="0 0 210 84">
+										<g transform="translate(4 0) skewX(-9)">
+											<text class="wm-snes-super" x="105" y="26" text-anchor="middle" textLength="88" lengthAdjust="spacingAndGlyphs">SUPER</text>
+										</g>
+										<text class="wm-snes-brand" x="105" y="58" text-anchor="middle" textLength="178" lengthAdjust="spacingAndGlyphs">NINTENDO</text>
+										<text class="wm-snes-sub" x="105" y="76" text-anchor="middle" textLength="150" lengthAdjust="spacingAndGlyphs">ENTERTAINMENT SYSTEM</text>
+									</svg>
+								</div>
+							</div>
+						</div>
 						<div class="feature-copy">
 							<h3>GBA, NES und SNES. Gemeinsam.</h3>
 							<p>Ein bis vier Spiele aus drei Generationen starten. Das Layout wechselt automatisch vom Solospiel zum vollen 2×2-Raster.</p>
 						</div>
 					</article>
 					<article class="feature-card reveal">
-						<span class="feature-tag">02 / GBA-LINK</span>
-						<div class="feature-visual"><img src="img/features/link-network.svg" alt="" loading="lazy"></div>
+						<canvas class="shader-gradient shader-gradient-tile" data-shader="link" aria-hidden="true"></canvas>
+						<div class="feature-visual">
+							<svg class="linkviz" viewBox="0 0 420 252" aria-hidden="true">
+								<ellipse class="linkviz-glow" cx="96" cy="174" rx="104" ry="70"/>
+								<ellipse class="linkviz-glow two" cx="324" cy="174" rx="104" ry="70"/>
+								<path class="linkviz-arc" d="M78 124C118 40 266 40 306 124"/>
+								<path class="linkviz-pulse" pathLength="100" d="M78 124C118 40 266 40 306 124"/>
+								<path class="linkviz-pulse back" pathLength="100" d="M306 124C266 40 118 40 78 124"/>
+								<circle class="linkviz-port" cx="78" cy="124" r="3.2" style="color: var(--cyan)"/>
+								<circle class="linkviz-port" cx="306" cy="124" r="3.2" style="color: var(--lime)"/>
+								<use href="#gba-device" x="6" y="116" width="180" height="116" style="color: var(--cyan)"/>
+								<use href="#gba-device" x="234" y="116" width="180" height="116" style="color: var(--lime)"/>
+								<text class="linkviz-label" x="96" y="248" text-anchor="middle">P1</text>
+								<text class="linkviz-label" x="324" y="248" text-anchor="middle">P2</text>
+							</svg>
+						</div>
 						<div class="feature-copy">
 							<h3>Echter GBA-Link. Ohne Kabel.</h3>
 							<p>GBA-Spiele tauschen und kämpfen über den emulierten 4-Spieler-Link-Bus, mit Live-Status direkt im HUD.</p>
 						</div>
 					</article>
 					<article class="feature-card reveal">
-						<span class="feature-tag">03 / RACE</span>
-						<div class="feature-visual"><img src="img/features/race-timer.svg" alt="" loading="lazy"></div>
+						<canvas class="shader-gradient shader-gradient-tile" data-shader="race" aria-hidden="true"></canvas>
+						<div class="feature-visual">
+							<div class="raceviz" aria-hidden="true">
+								<div class="raceviz-head">
+									<span class="raceviz-clock">
+										<svg class="raceviz-icon" viewBox="0 0 24 24"><path d="M9.6 2.4h4.8M12 4.4v2.6M19.1 5.3l1.7 1.7M12 22.4a7.9 7.9 0 1 0 0-15.8 7.9 7.9 0 0 0 0 15.8Zm0-11.4v3.9"/></svg>
+										<span class="raceviz-time">00:0<span class="rv-reel"><b><i>0</i><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i><i>7</i><i>8</i><i>9</i></b></span>.<span class="rv-reel tenths"><b><i>0</i><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i><i>7</i><i>8</i><i>9</i></b></span></span>
+									</span>
+									<span class="raceviz-chip">SYNCHRONER START</span>
+								</div>
+								<div class="raceviz-elapsed"><i></i></div>
+								<div class="raceviz-lanes">
+									<div class="raceviz-lane"><b>P1</b><span class="raceviz-rail"><i></i></span></div>
+									<div class="raceviz-lane"><b>P2</b><span class="raceviz-rail"><i></i></span></div>
+									<div class="raceviz-lane"><b>P3</b><span class="raceviz-rail"><i></i></span></div>
+									<div class="raceviz-lane"><b>P4</b><span class="raceviz-rail"><i></i></span></div>
+									<div class="raceviz-finish"></div>
+								</div>
+							</div>
+						</div>
 						<div class="feature-copy">
 							<h3>Race-Modus bereit.</h3>
 							<p>Alle Spiele synchron neu starten, Stoppuhr aktivieren oder Countdown setzen. Bei drei Spielern wird die freie Ecke zum Timer.</p>
 						</div>
 					</article>
 					<article class="feature-card feature-card-wide reveal">
-						<span class="feature-tag">04 / STEUERUNG</span>
-						<div class="feature-visual"><img src="img/features/shared-control.svg" alt="" loading="lazy"></div>
+						<canvas class="shader-gradient shader-gradient-tile" data-shader="tempo" aria-hidden="true"></canvas>
+						<div class="feature-visual">
+							<div class="tempoviz" aria-hidden="true">
+								<div class="tempoviz-readout">
+									<span class="tempoviz-value"><b class="s1">1×</b><b class="s2">2×</b><b class="s3">3×</b><b class="s4">4×</b></span>
+									<span class="tempoviz-label">GEMEINSAMES TEMPO</span>
+								</div>
+								<div class="tempoviz-control">
+									<div class="tempoviz-track">
+										<i class="tempoviz-notch"></i><i class="tempoviz-notch"></i><i class="tempoviz-notch"></i><i class="tempoviz-notch"></i>
+										<div class="tempoviz-fill"><span class="tempoviz-knob"></span></div>
+									</div>
+									<div class="tempoviz-scale"><span class="s1" data-value="1×">1×</span><span class="s2" data-value="2×">2×</span><span class="s3" data-value="3×">3×</span><span class="s4" data-value="4×">4×</span></div>
+								</div>
+							</div>
+						</div>
 						<div class="feature-copy">
 							<h3>Ein Tempo. Fair für alle.</h3>
 							<p>Alle Instanzen gemeinsam von 1× bis 4× beschleunigen, die komplette Session sichern und mit einer Taste wiederherstellen.</p>
@@ -166,17 +268,155 @@
 			</div>
 		</section>
 
-		<section class="section link-section" id="link">
+		<section class="section" id="link">
 			<div class="shell link-layout reveal">
 				<div class="link-stage" role="img" aria-label="Vier GBA-Bildschirme, verbunden über einen zentralen Link-Bus">
 					<canvas id="link-scene"></canvas>
-					<img class="link-fallback" src="img/features/link-network.svg" alt="">
+					<svg class="link-fallback" viewBox="0 0 180 116" aria-hidden="true"><use href="#gba-device" width="180" height="116"/></svg>
 					<span>GBA LINK · 4 NODES · LOKAL</span>
 				</div>
 				<div class="link-copy">
 					<h2>GBA-Link,<br>ganz einfach.</h2>
 					<p>Die ursprünglichen Regeln gelten weiterhin. Spieler 1 ist das Parent-Gerät und muss bei jedem Tausch oder Kampf dabei sein. Gemeinsam in den Kabelclub gehen und für die sauberste Verbindung auf Tempo 1× zurückschalten.</p>
 					<p class="link-note">Der Link-Bus ist eine GBA-Funktion. NES- und SNES-Spiele nutzen Splitemus gemeinsamen Screen, Race-Modus und Session-Steuerung ohne GBA-Link-Emulation.</p>
+				</div>
+			</div>
+		</section>
+
+		<section class="section" id="compatibility">
+			<div class="shell">
+				<div class="section-head reveal">
+					<h2>Was läuft<br>wo.</h2>
+					<p>Drei Systeme sind fertig, weitere sind in Arbeit. Alles hier steckt im aktuellen Release: keine Sternchen, keine Bezahlstufe, kein Account.</p>
+				</div>
+
+				<div class="compat-grid">
+					<section class="compat-block reveal" aria-labelledby="compat-systems-title">
+						<div class="compat-block-head">
+							<h3 id="compat-systems-title">Funktionen pro System</h3>
+							<p>Der Link-Bus ist eine GBA-Funktion. NES und SNES bekommen alles andere.</p>
+						</div>
+						<div class="compat-scroll" role="region" tabindex="0" aria-label="Funktionsmatrix pro System, scrollbar">
+							<table class="compat-table">
+								<caption class="compat-sr">Welche SplitEmu-Funktionen auf GBA, NES und SNES verfügbar sind.</caption>
+								<thead>
+									<tr>
+										<th scope="col">Funktion</th>
+										<th scope="col"><span class="compat-sys"><i class="system-dot gba"></i>GBA</span></th>
+										<th scope="col"><span class="compat-sys"><i class="system-dot nes"></i>NES</span></th>
+										<th scope="col"><span class="compat-sys"><i class="system-dot snes"></i>SNES</span></th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<th scope="row">Splitscreen für bis zu 4 Spieler</th>
+										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+									</tr>
+									<tr>
+										<th scope="row">Gemeinsames Tempo 1× bis 4×</th>
+										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+									</tr>
+									<tr>
+										<th scope="row">Race-Timer und synchroner Neustart</th>
+										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+									</tr>
+									<tr>
+										<th scope="row">Speicherstände für die ganze Session</th>
+										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+									</tr>
+									<tr>
+										<th scope="row">Link-Kabel: Tauschen und Kämpfen<small>nur GBA</small></th>
+										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+										<td><span class="compat-mark is-no"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M6.4 10h7.2"/></svg><span class="compat-sr">Nicht verfügbar</span></span></td>
+										<td><span class="compat-mark is-no"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M6.4 10h7.2"/></svg><span class="compat-sr">Nicht verfügbar</span></span></td>
+									</tr>
+									<tr>
+										<th scope="row">Controller- und Tastatureingabe</th>
+										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</section>
+
+					<section class="compat-roadmap reveal" aria-labelledby="compat-roadmap-title">
+						<div class="compat-roadmap-head">
+							<h3 id="compat-roadmap-title">Weitere Systeme auf der Roadmap</h3>
+							<p>Cores in Arbeit, ohne Versprechen zu Terminen.</p>
+						</div>
+						<ul class="compat-roadmap-list">
+							<li><span class="compat-roadmap-name">Game Boy und Game Boy Color</span><span class="compat-badge is-next">Als Nächstes</span></li>
+							<li><span class="compat-roadmap-name">Sega Mega Drive und Genesis</span><span class="compat-badge is-soon">Bald verfügbar</span></li>
+							<li><span class="compat-roadmap-name">Nintendo 64</span><span class="compat-badge is-soon">Bald verfügbar</span></li>
+						</ul>
+					</section>
+
+					<section class="compat-block reveal" aria-labelledby="compat-controllers-title">
+						<div class="compat-block-head">
+							<h3 id="compat-controllers-title">Controller-Unterstützung</h3>
+							<p>Erkennung läuft über SDL, die meisten modernen Pads laufen sofort.</p>
+						</div>
+						<div class="compat-scroll" role="region" tabindex="0" aria-label="Controller-Kompatibilität, scrollbar">
+							<table class="compat-table compat-table-devices">
+								<caption class="compat-sr">Controller und Eingabegeräte, die SplitEmu unterstützt.</caption>
+								<thead>
+									<tr>
+										<th scope="col">Gerät</th>
+										<th scope="col">Verbindung</th>
+										<th scope="col">Status</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<th scope="row">Nintendo Switch Pro Controller</th>
+										<td>USB-C oder Bluetooth</td>
+										<td><span class="compat-badge is-tested">Auf Hardware getestet</span></td>
+									</tr>
+									<tr>
+										<th scope="row">Xbox One und Series Controller</th>
+										<td>USB oder Bluetooth</td>
+										<td><span class="compat-badge is-ok">Unterstützt</span></td>
+									</tr>
+									<tr>
+										<th scope="row">PlayStation DualShock 4 und DualSense</th>
+										<td>USB oder Bluetooth</td>
+										<td><span class="compat-badge is-ok">Unterstützt</span></td>
+									</tr>
+									<tr>
+										<th scope="row">8BitDo-Pads</th>
+										<td>USB oder Bluetooth</td>
+										<td><span class="compat-badge is-ok">Unterstützt</span></td>
+									</tr>
+									<tr>
+										<th scope="row">Tastatur</th>
+										<td>Eingebaut</td>
+										<td><span class="compat-badge is-note">Nur Spieler 1</span></td>
+									</tr>
+									<tr>
+										<th scope="row">Weitere SDL-Pads</th>
+										<td><code>gamecontrollerdb.txt</code> neben die App legen</td>
+										<td><span class="compat-badge is-ok">Unterstützt</span></td>
+									</tr>
+									<tr class="is-upcoming">
+										<th scope="row">Einzelner Joy-Con, quer gehalten</th>
+										<td>Bluetooth</td>
+										<td><span class="compat-badge is-soon">Bald verfügbar</span></td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<p class="compat-foot">Hotplug klappt mitten in der Session, die Reihenfolge der Verbindung legt die Spielerreihenfolge fest. Spieler 1 kann jederzeit auf die Tastatur ausweichen, Spieler 2 bis 4 brauchen einen Controller.</p>
+					</section>
 				</div>
 			</div>
 		</section>
