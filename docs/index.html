@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 :root {
-	--bg: #16161a; --bg-soft: #1b1b20; --panel: #1f2027; --edge: #2c2d38;
+	--bg: #0f1018; --bg-soft: #171821; --panel: #1c1d27; --edge: #2c2d38;
 	--edge-hi: #4a4c62; --text: #eceef4; --dim: #a2a5b4;
 	--red: #e24c4c; --green: #56c878; --blue: #5c8cee; --yellow: #eec852;
 }
@@ -41,13 +41,84 @@ a:hover { text-decoration: underline; }
 	to   { transform: translate(7%, 6%) rotate(45deg) scale(1.16); }
 }
 @media (prefers-reduced-motion: reduce) {
-	.aurora, .wordmark, .blink, .card:hover::before { animation: none !important; }
+	.aurora, .wordmark, .blink, .card:hover::before, .starfield { animation: none !important; }
 	.reveal { opacity: 1 !important; transform: none !important; }
 }
 
+/* ---- Sternenhimmel ---- */
+.starfield { position: fixed; inset: 0; z-index: -1; pointer-events: none;
+	background-image:
+		radial-gradient(1px 1px at 63.7% 3.5%, rgba(236,238,244,0.64), transparent),
+		radial-gradient(1px 1px at 22.9% 73.2%, rgba(236,238,244,0.84), transparent),
+		radial-gradient(1px 1px at 88.4% 9.5%, rgba(236,238,244,0.71), transparent),
+		radial-gradient(1px 1px at 3.9% 22.4%, rgba(236,238,244,0.75), transparent),
+		radial-gradient(1px 1px at 3.6% 20.5%, rgba(236,238,244,0.82), transparent),
+		radial-gradient(1px 1px at 54.4% 22.6%, rgba(236,238,244,0.79), transparent),
+		radial-gradient(1px 1px at 80.3% 1.6%, rgba(236,238,244,0.9), transparent),
+		radial-gradient(1px 1px at 69.4% 34.3%, rgba(236,238,244,0.58), transparent),
+		radial-gradient(1px 1px at 94.8% 34.0%, rgba(236,238,244,0.55), transparent),
+		radial-gradient(1px 1px at 10.5% 84.1%, rgba(236,238,244,0.8), transparent),
+		radial-gradient(1px 1px at 80.1% 72.5%, rgba(236,238,244,0.77), transparent),
+		radial-gradient(1px 1px at 96.4% 38.1%, rgba(236,238,244,0.78), transparent),
+		radial-gradient(1px 1px at 82.3% 61.6%, rgba(236,238,244,0.93), transparent),
+		radial-gradient(1px 1px at 57.6% 70.0%, rgba(236,238,244,0.52), transparent),
+		radial-gradient(1px 1px at 23.3% 29.4%, rgba(236,238,244,0.54), transparent),
+		radial-gradient(1px 1px at 23.8% 10.9%, rgba(236,238,244,0.64), transparent),
+		radial-gradient(1px 1px at 63.3% 36.8%, rgba(236,238,244,0.69), transparent),
+		radial-gradient(1px 1px at 21.5% 27.2%, rgba(236,238,244,0.97), transparent),
+		radial-gradient(1px 1px at 64.5% 60.7%, rgba(236,238,244,0.59), transparent),
+		radial-gradient(1px 1px at 72.5% 17.0%, rgba(236,238,244,0.69), transparent),
+		radial-gradient(1px 1px at 98.0% 63.7%, rgba(236,238,244,0.78), transparent),
+		radial-gradient(1px 1px at 68.1% 83.6%, rgba(236,238,244,0.89), transparent),
+		radial-gradient(1px 1px at 23.4% 4.1%, rgba(236,238,244,0.66), transparent),
+		radial-gradient(1px 1px at 27.2% 21.7%, rgba(236,238,244,0.97), transparent),
+		radial-gradient(1px 1px at 86.9% 31.8%, rgba(236,238,244,0.83), transparent),
+		radial-gradient(1px 1px at 39.8% 90.6%, rgba(236,238,244,0.73), transparent),
+		radial-gradient(1px 1px at 27.0% 25.2%, rgba(236,238,244,0.78), transparent),
+		radial-gradient(1px 1px at 26.7% 58.3%, rgba(236,238,244,0.95), transparent),
+		radial-gradient(1px 1px at 40.1% 22.5%, rgba(236,238,244,1.0), transparent),
+		radial-gradient(1px 1px at 50.9% 9.9%, rgba(236,238,244,0.52), transparent),
+		radial-gradient(1px 1px at 11.7% 62.5%, rgba(236,238,244,0.9), transparent),
+		radial-gradient(1px 1px at 42.4% 7.2%, rgba(236,238,244,0.69), transparent),
+		radial-gradient(1px 1px at 98.6% 52.9%, rgba(236,238,244,0.99), transparent),
+		radial-gradient(1px 1px at 85.4% 2.1%, rgba(236,238,244,0.86), transparent);
+	opacity: .5; }
+.starfield.b { background-image:
+		radial-gradient(2px 2px at 67.8% 53.6%, rgba(236,238,244,0.63), transparent),
+		radial-gradient(2px 2px at 63.8% 11.9%, rgba(236,238,244,0.72), transparent),
+		radial-gradient(2px 2px at 45.5% 94.5%, rgba(236,238,244,0.94), transparent),
+		radial-gradient(2px 2px at 26.8% 50.1%, rgba(236,238,244,0.59), transparent),
+		radial-gradient(2px 2px at 90.4% 86.3%, rgba(236,238,244,0.65), transparent),
+		radial-gradient(2px 2px at 63.6% 60.7%, rgba(236,238,244,0.58), transparent),
+		radial-gradient(2px 2px at 75.7% 53.9%, rgba(236,238,244,0.89), transparent),
+		radial-gradient(2px 2px at 53.0% 1.1%, rgba(236,238,244,0.66), transparent),
+		radial-gradient(2px 2px at 2.9% 92.1%, rgba(236,238,244,0.94), transparent),
+		radial-gradient(2px 2px at 82.5% 31.1%, rgba(236,238,244,0.53), transparent),
+		radial-gradient(2px 2px at 87.0% 93.8%, rgba(236,238,244,0.54), transparent),
+		radial-gradient(2px 2px at 48.6% 7.8%, rgba(236,238,244,0.88), transparent),
+		radial-gradient(2px 2px at 76.1% 13.6%, rgba(236,238,244,0.74), transparent),
+		radial-gradient(2px 2px at 54.9% 27.0%, rgba(236,238,244,0.94), transparent),
+		radial-gradient(2px 2px at 42.5% 21.8%, rgba(236,238,244,0.77), transparent),
+		radial-gradient(2px 2px at 72.5% 20.7%, rgba(236,238,244,0.66), transparent),
+		radial-gradient(2px 2px at 98.5% 64.7%, rgba(236,238,244,0.72), transparent),
+		radial-gradient(2px 2px at 51.7% 12.9%, rgba(236,238,244,0.61), transparent);
+	opacity: .45; animation: twinkle 4.2s ease-in-out infinite alternate; }
+.starfield.c { background-image:
+		radial-gradient(3px 3px at 34.1% 58.7%, rgba(236,238,244,0.62), transparent),
+		radial-gradient(3px 3px at 22.6% 8.0%, rgba(236,238,244,0.82), transparent),
+		radial-gradient(3px 3px at 23.4% 89.7%, rgba(236,238,244,0.93), transparent),
+		radial-gradient(3px 3px at 7.9% 24.3%, rgba(236,238,244,0.83), transparent),
+		radial-gradient(3px 3px at 22.0% 14.0%, rgba(236,238,244,0.97), transparent),
+		radial-gradient(3px 3px at 57.0% 47.3%, rgba(236,238,244,0.89), transparent),
+		radial-gradient(3px 3px at 80.1% 19.7%, rgba(236,238,244,0.55), transparent),
+		radial-gradient(3px 3px at 43.2% 42.5%, rgba(236,238,244,0.73), transparent),
+		radial-gradient(3px 3px at 72.4% 67.0%, rgba(236,238,244,0.99), transparent);
+	opacity: .35; animation: twinkle 6s ease-in-out infinite alternate-reverse; }
+@keyframes twinkle { from { opacity: .2; } to { opacity: .75; } }
+
 /* ---- Navigation ---- */
 nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(14px);
-	background: rgba(22,22,26,.8); border-bottom: 1px solid var(--edge); }
+	background: rgba(15,16,24,.8); border-bottom: 1px solid var(--edge); }
 .navrow { display: flex; align-items: center; gap: 26px; height: 60px; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 800;
 	color: var(--text); font-size: 1.02rem; }
@@ -199,6 +270,10 @@ footer a { color: var(--text); }
 </style>
 </head>
 <body>
+
+<div class="starfield"></div>
+<div class="starfield b"></div>
+<div class="starfield c"></div>
 
 <nav><div class="wrap navrow">
 	<a class="brand" href="#"><img src="img/icon.png" alt="">SplitGBA</a>
