@@ -162,7 +162,6 @@ video {
 .brand img {
 	width: 34px;
 	height: 34px;
-	filter: drop-shadow(0 0 12px rgba(117, 231, 255, .18));
 }
 
 .brand span {
@@ -1183,6 +1182,358 @@ code {
 	50% { border-color: rgba(183, 245, 106, .34); box-shadow: 0 0 34px rgba(183, 245, 106, .08); }
 }
 
+/* ---- Design pass 2: multi-system visuals + shader surfaces ---- */
+.hero {
+	overflow: hidden;
+}
+
+.hero::before {
+	display: none;
+}
+
+.hero > .shell {
+	position: relative;
+	z-index: 1;
+}
+
+.shader-gradient {
+	display: block;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
+.shader-gradient-hero {
+	position: absolute;
+	z-index: -1;
+	inset: 0;
+	opacity: .72;
+	mask-image: linear-gradient(to bottom, #000 0, rgba(0, 0, 0, .78) 44%, transparent 91%);
+}
+
+.system-pills {
+	display: flex;
+	margin-top: 22px;
+	justify-content: center;
+	gap: 9px;
+}
+
+.system-pills span {
+	display: inline-flex;
+	padding: 6px 10px;
+	border: 1px solid var(--line);
+	border-radius: 999px;
+	align-items: center;
+	gap: 7px;
+	background: rgba(8, 11, 17, .42);
+	color: var(--muted);
+	font-family: "IBM Plex Mono", monospace;
+	font-size: .64rem;
+	letter-spacing: .07em;
+	backdrop-filter: blur(12px);
+}
+
+.system-dot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--cyan);
+	box-shadow: 0 0 8px currentColor;
+}
+
+.system-dot.nes { background: var(--coral); }
+.system-dot.snes { background: var(--lime); }
+
+.section-head h2 {
+	margin-top: 0;
+}
+
+.visual-grid .feature-card {
+	display: flex;
+	min-height: 455px;
+	padding: 25px;
+	flex-direction: column;
+}
+
+.visual-grid .feature-card::after {
+	display: none;
+}
+
+.feature-visual {
+	position: relative;
+	display: grid;
+	min-height: 225px;
+	margin: -2px -2px 24px;
+	overflow: hidden;
+	place-items: center;
+	border-bottom: 1px solid var(--line);
+}
+
+.feature-visual::before {
+	position: absolute;
+	inset: 7% 8%;
+	border-radius: 50%;
+	background: radial-gradient(circle, rgba(117, 231, 255, .1), transparent 68%);
+	content: "";
+	filter: blur(18px);
+	opacity: .75;
+	transition: transform .6s ease, opacity .4s ease;
+}
+
+.visual-grid .feature-card:nth-child(2) .feature-visual::before {
+	background: radial-gradient(circle, rgba(183, 245, 106, .11), transparent 68%);
+}
+
+.visual-grid .feature-card:nth-child(3) .feature-visual::before {
+	background: radial-gradient(circle, rgba(255, 201, 107, .1), transparent 68%);
+}
+
+.visual-grid .feature-card:nth-child(4) .feature-visual::before {
+	background: radial-gradient(circle, rgba(255, 119, 129, .1), transparent 68%);
+}
+
+.feature-visual img {
+	position: relative;
+	z-index: 1;
+	width: min(100%, 440px);
+	height: 215px;
+	object-fit: contain;
+	transform: translate3d(var(--visual-x, 0), var(--visual-y, 0), 0) scale(1);
+	transition: transform .45s cubic-bezier(.2, .7, .2, 1), filter .35s;
+}
+
+.feature-card:hover .feature-visual img {
+	filter: saturate(1.16) brightness(1.08);
+	transform: translate3d(var(--visual-x, 0), var(--visual-y, 0), 0) scale(1.035);
+}
+
+.feature-card:hover .feature-visual::before {
+	opacity: 1;
+	transform: scale(1.2);
+}
+
+.feature-copy {
+	margin-top: auto;
+}
+
+.feature-copy h3 {
+	margin-bottom: 8px;
+}
+
+.link-section {
+	padding-top: 132px;
+}
+
+.link-layout {
+	display: grid;
+	min-height: 520px;
+	padding-block: 44px;
+	border-block: 1px solid var(--line);
+	grid-template-columns: minmax(0, 1fr) minmax(360px, .9fr);
+	align-items: center;
+	gap: clamp(48px, 8vw, 110px);
+}
+
+.link-stage {
+	position: relative;
+	min-height: 430px;
+}
+
+#link-scene {
+	position: absolute;
+	inset: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.link-fallback {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: min(88%, 470px);
+	transform: translate(-50%, -50%);
+	transition: opacity .3s;
+}
+
+.link-stage.three-ready .link-fallback {
+	opacity: 0;
+}
+
+.link-stage > span {
+	position: absolute;
+	right: 0;
+	bottom: 14px;
+	left: 0;
+	color: var(--faint);
+	font-family: "IBM Plex Mono", monospace;
+	font-size: .62rem;
+	letter-spacing: .14em;
+	text-align: center;
+}
+
+.link-copy h2 {
+	margin-bottom: 22px;
+	font-size: clamp(2.3rem, 5vw, 4.35rem);
+	font-weight: 600;
+	letter-spacing: -.065em;
+	line-height: 1.02;
+}
+
+.link-copy > p {
+	max-width: 540px;
+	color: var(--muted);
+	font-size: .92rem;
+}
+
+.link-copy .link-note {
+	margin-top: 24px;
+	padding-top: 20px;
+	border-top: 1px solid var(--line);
+	color: var(--faint);
+	font-family: "IBM Plex Mono", monospace;
+	font-size: .68rem;
+	line-height: 1.7;
+}
+
+.start-layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(330px, 430px);
+	align-items: stretch;
+	gap: 22px;
+}
+
+.setup-steps {
+	display: grid;
+	border-block: 1px solid var(--line);
+}
+
+.setup-step {
+	display: grid;
+	padding: 24px 4px;
+	grid-template-columns: 54px 1fr;
+	gap: 14px;
+}
+
+.setup-step + .setup-step {
+	border-top: 1px solid var(--line);
+}
+
+.setup-step > span {
+	color: var(--cyan);
+	font-family: "IBM Plex Mono", monospace;
+	font-size: .66rem;
+	letter-spacing: .1em;
+}
+
+.setup-step h3 {
+	margin-bottom: 6px;
+	font-size: .96rem;
+}
+
+.setup-step p {
+	max-width: 610px;
+	color: var(--muted);
+	font-size: .82rem;
+}
+
+.setup-step a {
+	color: var(--cyan);
+}
+
+.build-card {
+	position: relative;
+	min-height: 350px;
+	overflow: hidden;
+	border: 1px solid var(--line-high);
+	border-radius: var(--radius-lg);
+	background: #090d14;
+	box-shadow: 0 26px 70px rgba(0, 0, 0, .34);
+}
+
+.shader-gradient-build {
+	position: absolute;
+	inset: 0;
+	opacity: .74;
+}
+
+.build-card::after {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(145deg, rgba(5, 8, 12, .24), rgba(5, 8, 12, .9) 68%);
+	content: "";
+	pointer-events: none;
+}
+
+.build-card-content {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	height: 100%;
+	padding: 25px;
+	flex-direction: column;
+}
+
+.build-card-top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	color: var(--cyan-bright);
+	font-family: "IBM Plex Mono", monospace;
+	font-size: .61rem;
+	letter-spacing: .12em;
+}
+
+.build-card-top i {
+	color: var(--faint);
+	font-style: normal;
+	letter-spacing: .04em;
+}
+
+.build-card h3 {
+	margin-top: 46px;
+	font-size: 1.22rem;
+	letter-spacing: -.035em;
+}
+
+.build-card pre {
+	margin: 18px 0 24px;
+	overflow-x: auto;
+	color: var(--muted);
+	font-family: "IBM Plex Mono", monospace;
+	font-size: .69rem;
+	line-height: 1.8;
+	white-space: pre-wrap;
+}
+
+.build-card pre span {
+	color: var(--lime);
+}
+
+.copy-command {
+	align-self: flex-start;
+	margin-top: auto;
+	padding: 9px 12px;
+	border: 1px solid var(--line-high);
+	border-radius: 9px;
+	background: rgba(255, 255, 255, .04);
+	color: var(--ink);
+	cursor: pointer;
+	font-family: "IBM Plex Mono", monospace;
+	font-size: .64rem;
+	transition: border-color .2s, background .2s, color .2s;
+}
+
+.copy-command:hover {
+	border-color: rgba(117, 231, 255, .55);
+	background: rgba(117, 231, 255, .08);
+}
+
+.copy-command.is-copied {
+	border-color: rgba(183, 245, 106, .55);
+	color: var(--lime);
+}
+
 @media (max-width: 900px) {
 	.navlinks {
 		position: absolute;
@@ -1267,6 +1618,23 @@ code {
 	.feature-card:nth-child(n) {
 		grid-column: span 6;
 	}
+
+	.link-layout,
+	.start-layout {
+		grid-template-columns: 1fr;
+	}
+
+	.link-layout {
+		gap: 28px;
+	}
+
+	.link-stage {
+		min-height: 380px;
+	}
+
+	.build-card {
+		width: min(100%, 480px);
+	}
 }
 
 @media (max-width: 640px) {
@@ -1289,6 +1657,10 @@ code {
 
 	.hero-lead {
 		font-size: .93rem;
+	}
+
+	.system-pills {
+		margin-top: 18px;
 	}
 
 	.hero-actions {
@@ -1341,7 +1713,15 @@ code {
 	}
 
 	.feature-card {
-		min-height: 225px;
+		min-height: 420px;
+	}
+
+	.feature-visual {
+		min-height: 200px;
+	}
+
+	.feature-visual img {
+		height: 195px;
 	}
 
 	.showcase-grid {
@@ -1371,6 +1751,22 @@ code {
 		transform: scale(.86);
 	}
 
+	.link-section {
+		padding-top: 92px;
+	}
+
+	.link-layout {
+		padding-block: 20px 50px;
+	}
+
+	.link-stage {
+		min-height: 320px;
+	}
+
+	.link-copy h2 {
+		font-size: clamp(2.5rem, 13vw, 3.8rem);
+	}
+
 	.steps {
 		grid-template-columns: 1fr;
 	}
@@ -1381,6 +1777,14 @@ code {
 
 	.step-number {
 		margin-bottom: 34px;
+	}
+
+	.setup-step {
+		grid-template-columns: 42px 1fr;
+	}
+
+	.build-card {
+		min-height: 330px;
 	}
 
 	.legal-inner,

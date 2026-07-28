@@ -3,8 +3,8 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>SplitEmu · Four Game Boys. One screen.</title>
-	<meta name="description" content="Open-source split-screen couch multiplayer for Game Boy Advance. Run up to four linked games on one TV with shared speed, race timers and controller support.">
+	<title>SplitEmu · GBA, NES &amp; SNES multiplayer on one screen</title>
+	<meta name="description" content="Open-source split-screen couch multiplayer for GBA, NES and SNES. Run up to four games on one TV with shared speed, race timers, save states and controller support.">
 	<meta name="theme-color" content="#080b11">
 	<link rel="icon" href="img/splitemu-mark.svg" type="image/svg+xml">
 	<link rel="alternate" hreflang="de" href="de.html">
@@ -24,7 +24,7 @@
 			<div class="navlinks">
 				<a href="#features">Features</a>
 				<a href="#showcase">Showcase</a>
-				<a href="#link">Link guide</a>
+				<a href="#link">GBA link</a>
 				<a href="#start">Get started</a>
 				<details class="language">
 					<summary aria-label="Change language">
@@ -43,13 +43,19 @@
 
 	<main id="main">
 		<header class="hero">
+			<canvas class="shader-gradient shader-gradient-hero" data-shader="hero" aria-hidden="true"></canvas>
 			<div class="shell">
 				<div class="hero-copy">
 					<a class="release-pill" href="https://github.com/JosipFX/splitemu/releases/latest">
-						<strong>New</strong> Ready for macOS, Windows &amp; Linux <span aria-hidden="true">→</span>
+						<strong>New</strong> Now with NES &amp; SNES <span aria-hidden="true">→</span>
 					</a>
-					<h1>Four Game Boys.<br><span class="gradient-text">One screen.</span></h1>
-					<p class="hero-lead">The open-source GBA emulator built for game night. Plug in up to four controllers, launch your games and play side by side—linked, synced and fast.</p>
+					<h1>Four games.<br><span class="gradient-text">One screen.</span></h1>
+					<p class="hero-lead">The open-source emulator built for game night. Play GBA, NES and SNES side by side with up to four controllers—local, synchronized and made for the TV.</p>
+					<div class="system-pills" aria-label="Supported systems">
+						<span><i class="system-dot gba"></i>GBA</span>
+						<span><i class="system-dot nes"></i>NES</span>
+						<span><i class="system-dot snes"></i>SNES</span>
+					</div>
 					<div class="hero-actions">
 						<a class="button primary" href="https://github.com/JosipFX/splitemu/releases/latest">
 							<svg viewBox="0 0 24 24"><path d="M11 3h2v10.17l3.59-3.58L18 11l-6 6-6-6 1.41-1.41L11 13.17V3ZM5 19h14v2H5v-2Z"/></svg>
@@ -66,7 +72,7 @@
 				<div class="hero-visual">
 					<div class="signal-line"></div>
 					<div class="float-chip one">4 instances synced</div>
-					<div class="float-chip two">Link bus active</div>
+					<div class="float-chip two">3 systems ready</div>
 					<div class="window">
 						<div class="window-bar">
 							<div class="window-dots"><i></i><i></i><i></i></div>
@@ -80,9 +86,9 @@
 				</div>
 
 				<div class="metrics reveal" aria-label="SplitEmu highlights">
+					<div class="metric"><strong>3</strong><span>retro systems</span></div>
 					<div class="metric"><strong>1–4</strong><span>local players</span></div>
 					<div class="metric"><strong>4×</strong><span>shared speed</span></div>
-					<div class="metric"><strong>0 ms</strong><span>cloud latency</span></div>
 					<div class="metric"><strong>100%</strong><span>open source</span></div>
 				</div>
 			</div>
@@ -91,36 +97,41 @@
 		<section class="section" id="features">
 			<div class="shell">
 				<div class="section-head reveal">
-					<div>
-						<span class="eyebrow">Built for the sofa</span>
-						<h2>Multiplayer,<br>without the clutter.</h2>
-					</div>
-					<p>Everything required to turn one TV into four Game Boys. SplitEmu keeps every player visible, every controller separate and every session in sync.</p>
+					<h2>Retro multiplayer,<br>without the clutter.</h2>
+					<p>GBA, NES and SNES sessions share the same focused interface: every player visible, every controller separate and every game under one roof.</p>
 				</div>
-				<div class="feature-grid">
-					<article class="feature-card reveal">
-						<span class="feature-tag">01 / DISPLAY</span>
-						<div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16M3 12h18"/></svg></div>
-						<h3>One screen. Four adventures.</h3>
-						<p>Frame-perfect layouts adapt automatically from solo play to a full 2×2 grid. Every player keeps a crisp viewport and their own save.</p>
+				<div class="feature-grid visual-grid">
+					<article class="feature-card feature-card-wide reveal">
+						<span class="feature-tag">01 / SYSTEMS</span>
+						<div class="feature-visual"><img src="img/features/systems-grid.svg" alt="" loading="lazy"></div>
+						<div class="feature-copy">
+							<h3>GBA, NES and SNES. Together.</h3>
+							<p>Launch one to four games from three generations. The layout adapts automatically from solo play to a full 2×2 grid.</p>
+						</div>
 					</article>
 					<article class="feature-card reveal">
-						<span class="feature-tag">02 / LINK</span>
-						<div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M8 7H6a4 4 0 0 0 0 8h2m8 0h2a4 4 0 0 0 0-8h-2M8 12h8"/></svg></div>
-						<h3>Link cable built in.</h3>
-						<p>Trade and battle on the emulated four-player link bus, with live connection status directly in the HUD.</p>
+						<span class="feature-tag">02 / GBA LINK</span>
+						<div class="feature-visual"><img src="img/features/link-network.svg" alt="" loading="lazy"></div>
+						<div class="feature-copy">
+							<h3>Real GBA link. No cable.</h3>
+							<p>GBA games can trade and battle through the emulated four-player link bus, with live status in the HUD.</p>
+						</div>
 					</article>
 					<article class="feature-card reveal">
 						<span class="feature-tag">03 / RACE</span>
-						<div class="feature-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M9 2h6m-3 3v8l4 2"/></svg></div>
-						<h3>Race mode, ready.</h3>
-						<p>Reset all games in sync, start a stopwatch or set a countdown. The empty quadrant becomes the timer in three-player mode.</p>
+						<div class="feature-visual"><img src="img/features/race-timer.svg" alt="" loading="lazy"></div>
+						<div class="feature-copy">
+							<h3>Race mode, ready.</h3>
+							<p>Reset all games in sync, start a stopwatch or set a countdown. The empty quadrant becomes the timer with three players.</p>
+						</div>
 					</article>
-					<article class="feature-card reveal">
+					<article class="feature-card feature-card-wide reveal">
 						<span class="feature-tag">04 / CONTROL</span>
-						<div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M6 12h12M14 7l5 5-5 5M10 7l-5 5 5 5"/></svg></div>
-						<h3>One tempo. Fair for everyone.</h3>
-						<p>Speed up every instance together from 1× to 4×, snapshot all four games at the same moment and restore the complete session with one key.</p>
+						<div class="feature-visual"><img src="img/features/shared-control.svg" alt="" loading="lazy"></div>
+						<div class="feature-copy">
+							<h3>One tempo. Fair for everyone.</h3>
+							<p>Speed up every instance together from 1× to 4×, snapshot the complete session and restore it with one key.</p>
+						</div>
 					</article>
 				</div>
 			</div>
@@ -129,21 +140,18 @@
 		<section class="section" id="showcase">
 			<div class="shell">
 				<div class="section-head reveal">
-					<div>
-						<span class="eyebrow">Inside the app</span>
-						<h2>Made to disappear<br>behind the game.</h2>
-					</div>
-					<p>A clean launcher gets everyone into the session. The in-game controls stay one key away and out of sight when you do not need them.</p>
+					<h2>The game stays<br>center stage.</h2>
+					<p>A clean launcher gets everyone into the session. Controls remain one key away and disappear as soon as you no longer need them.</p>
 				</div>
 				<div class="showcase-grid">
 					<figure class="shot wide reveal">
-						<button type="button" data-lightbox data-caption="Four linked instances in one responsive 2×2 layout.">
-							<img src="img/anguna4.png" alt="Four GBA games running in a two by two SplitEmu grid" loading="lazy">
-							<span class="shot-caption">Four linked instances, one screen</span>
+						<button type="button" data-lightbox data-caption="Four instances in one responsive 2×2 layout.">
+							<img src="img/anguna4.png" alt="Four games running in a two by two SplitEmu grid" loading="lazy">
+							<span class="shot-caption">Four instances, one screen</span>
 						</button>
 					</figure>
 					<figure class="shot reveal">
-						<button type="button" data-lightbox data-caption="Pick a game, player count and names from the launcher.">
+						<button type="button" data-lightbox data-caption="Pick games, systems, player count and names from the launcher.">
 							<img src="img/launcher.png" alt="SplitEmu launcher" loading="lazy">
 							<span class="shot-caption">Fast session setup</span>
 						</button>
@@ -158,28 +166,17 @@
 			</div>
 		</section>
 
-		<section class="section" id="link">
-			<div class="shell">
-				<div class="link-panel reveal">
-					<div class="link-visual" aria-hidden="true">
-						<div class="link-orbit">
-							<span class="orbit-node">P1</span>
-							<span class="orbit-node">P2</span>
-							<span class="orbit-node">P3</span>
-							<span class="orbit-node">P4</span>
-							<span class="link-core">LINK</span>
-						</div>
-					</div>
-					<div class="link-copy">
-						<span class="eyebrow">Link guide</span>
-						<h3>Real link rules.<br>No extra cables.</h3>
-						<p>The connection behaves like the original four-player adapter. That includes one important rule:</p>
-						<ol class="link-rules">
-							<li><span><strong>Player 1 must join every trade or battle.</strong> As the parent device, P1 clocks the entire bus.</span></li>
-							<li><span>Enter the in-game Cable Club together and switch back to 1× speed for the cleanest connection.</span></li>
-							<li><span>Original game compatibility still applies. SplitEmu does not bypass Generation 3 trading rules.</span></li>
-						</ol>
-					</div>
+		<section class="section link-section" id="link">
+			<div class="shell link-layout reveal">
+				<div class="link-stage" role="img" aria-label="Four GBA screens connected through a central link bus">
+					<canvas id="link-scene"></canvas>
+					<img class="link-fallback" src="img/features/link-network.svg" alt="">
+					<span>GBA LINK · 4 NODES · LOCAL</span>
+				</div>
+				<div class="link-copy">
+					<h2>GBA link,<br>kept simple.</h2>
+					<p>The original rules still apply. Player 1 is the parent device and must join every trade or battle. Enter the Cable Club together and switch back to 1× speed for the cleanest connection.</p>
+					<p class="link-note">The link bus is a GBA feature. NES and SNES games use SplitEmu’s shared-screen, race and session controls without GBA link emulation.</p>
 				</div>
 			</div>
 		</section>
@@ -187,34 +184,35 @@
 		<section class="section" id="start">
 			<div class="shell">
 				<div class="section-head reveal">
-					<div>
-						<span class="eyebrow">Start a session</span>
-						<h2>From download<br>to game night.</h2>
+					<h2>From download<br>to game night.</h2>
+					<p>No account, no setup wizard and no bundled games. Download the app, add dumps from cartridges you own and press start.</p>
+				</div>
+				<div class="start-layout">
+					<div class="setup-steps">
+						<article class="setup-step reveal">
+							<span>01</span>
+							<div><h3>Download SplitEmu</h3><p>Grab the <a href="https://github.com/JosipFX/splitemu/releases/latest">latest release</a> for macOS, Windows or Linux.</p></div>
+						</article>
+						<article class="setup-step reveal">
+							<span>02</span>
+							<div><h3>Add your games</h3><p>Choose your own <code>.gba</code>, <code>.nes</code>, <code>.sfc</code> or <code>.smc</code> dumps in the launcher.</p></div>
+						</article>
+						<article class="setup-step reveal">
+							<span>03</span>
+							<div><h3>Plug in and play</h3><p>Connect controllers, choose the player count and go fullscreen on the TV.</p></div>
+						</article>
 					</div>
-					<p>No account, no setup wizard and no bundled games. Download the app, add ROM dumps from cartridges you own and press start.</p>
-				</div>
-				<div class="steps">
-					<article class="step reveal">
-						<div class="step-number">STEP 01</div>
-						<h3>Download SplitEmu</h3>
-						<p>Grab the <a href="https://github.com/JosipFX/splitemu/releases/latest">latest release</a> for macOS, Windows or Linux.</p>
-					</article>
-					<article class="step reveal">
-						<div class="step-number">STEP 02</div>
-						<h3>Add your games</h3>
-						<p>Place your own <code>.gba</code> dumps in a <code>roms/</code> folder or choose them directly in the launcher.</p>
-					</article>
-					<article class="step reveal">
-						<div class="step-number">STEP 03</div>
-						<h3>Plug in and play</h3>
-						<p>Connect controllers, choose the player count and go fullscreen on the TV. Xbox, PlayStation, Switch Pro and 8BitDo are supported.</p>
-					</article>
-				</div>
-				<div class="terminal reveal">
-					<div class="terminal-bar"><span>build from source</span><span>bash</span></div>
-					<pre><span class="prompt">$</span> <span class="command">git clone --recursive https://github.com/JosipFX/splitemu.git</span>
-<span class="prompt">$</span> <span class="command">cd splitemu &amp;&amp; ./build.sh</span>
-<span class="prompt">$</span> <span class="command">./build/splitemu</span></pre>
+					<aside class="build-card reveal">
+						<canvas class="shader-gradient shader-gradient-build" data-shader="build" aria-hidden="true"></canvas>
+						<div class="build-card-content">
+							<div class="build-card-top"><span>BUILD FROM SOURCE</span><i>bash</i></div>
+							<h3>Prefer the terminal?</h3>
+							<pre><span>$</span> git clone --recursive \
+  github.com/JosipFX/splitemu.git
+<span>$</span> cd splitemu &amp;&amp; ./build.sh</pre>
+							<button type="button" class="copy-command" data-copy-command="git clone --recursive https://github.com/JosipFX/splitemu.git &amp;&amp; cd splitemu &amp;&amp; ./build.sh">Copy command</button>
+						</div>
+					</aside>
 				</div>
 			</div>
 		</section>
@@ -222,7 +220,7 @@
 		<section class="legal">
 			<div class="shell legal-inner">
 				<h2>Good to know</h2>
-				<p class="legal-copy">SplitEmu ships no games and downloads none. Use only ROM files dumped from cartridges you own. Nintendo, Game Boy Advance and Pokémon are trademarks of their respective owners; this independent project is not affiliated with or endorsed by them. The screenshots use the freely available homebrew game <a href="https://www.bitethechili.com/anguna">Anguna</a>.</p>
+				<p class="legal-copy">SplitEmu ships no games and downloads none. Use only ROM files dumped from cartridges you own. Nintendo, Game Boy Advance, Nintendo Entertainment System and Super Nintendo are trademarks of their respective owners; this independent project is not affiliated with or endorsed by them. The screenshots use the freely available homebrew game <a href="https://www.bitethechili.com/anguna">Anguna</a>.</p>
 			</div>
 		</section>
 	</main>
@@ -234,7 +232,7 @@
 				<a href="https://github.com/JosipFX/splitemu">GitHub</a>
 				<a href="https://github.com/JosipFX/splitemu/releases/latest">Releases</a>
 				<a href="https://github.com/JosipFX/splitemu/blob/main/LICENSE">MIT License</a>
-				<a href="https://mgba.io">Built on mGBA</a>
+				<span>GBA · NES · SNES</span>
 			</div>
 		</div>
 	</footer>

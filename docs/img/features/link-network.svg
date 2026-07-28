@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 320" fill="none" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="ln-bg" x1="48" y1="0" x2="604" y2="320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#121D1F"/>
+      <stop offset=".55" stop-color="#0B1218"/>
+      <stop offset="1" stop-color="#080C12"/>
+    </linearGradient>
+    <linearGradient id="ln-node" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#26383D"/>
+      <stop offset="1" stop-color="#101820"/>
+    </linearGradient>
+    <radialGradient id="ln-core" cx="0" cy="0" r="1" gradientTransform="translate(320 160) rotate(90) scale(72)">
+      <stop stop-color="#B7F56A" stop-opacity=".3"/>
+      <stop offset="1" stop-color="#B7F56A" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="ln-shadow" x="-35%" y="-35%" width="170%" height="190%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#02050A" flood-opacity=".65"/>
+    </filter>
+    <filter id="ln-glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+    <path id="ln-path-a" d="M159 97C220 96 242 121 286 147"/>
+    <path id="ln-path-b" d="M481 97C420 96 398 121 354 147"/>
+    <path id="ln-path-c" d="M159 223C220 224 242 199 286 173"/>
+    <path id="ln-path-d" d="M481 223C420 224 398 199 354 173"/>
+  </defs>
+  <style>
+    .ln-packet { animation: ln-packet 2.7s linear infinite; }
+    .ln-packet-b { animation-delay: -.68s; }
+    .ln-packet-c { animation-delay: -1.35s; }
+    .ln-packet-d { animation-delay: -2.03s; }
+    .ln-core-ring { animation: ln-ring 2.7s ease-out infinite; transform-origin: 320px 160px; }
+    .ln-led { animation: ln-led 1.8s ease-in-out infinite; }
+    @keyframes ln-packet { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+    @keyframes ln-ring { 0% { transform: scale(.55); opacity: .9; } 85%,100% { transform: scale(1.35); opacity: 0; } }
+    @keyframes ln-led { 0%,100% { opacity: .35; } 50% { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .ln-packet,.ln-core-ring,.ln-led { animation: none; } }
+  </style>
+
+  <rect width="640" height="320" rx="24" fill="url(#ln-bg)"/>
+  <path d="M48 56H592M48 264H592M88 24V296M552 24V296" stroke="#B7F56A" stroke-opacity=".045"/>
+  <circle cx="320" cy="160" r="133" stroke="#B7F56A" stroke-opacity=".06"/>
+  <circle cx="320" cy="160" r="93" stroke="#B7F56A" stroke-opacity=".07" stroke-dasharray="2 9"/>
+  <circle cx="320" cy="160" r="72" fill="url(#ln-core)"/>
+
+  <g stroke="#B7F56A" stroke-opacity=".36" stroke-width="1.5">
+    <use href="#ln-path-a"/>
+    <use href="#ln-path-b"/>
+    <use href="#ln-path-c"/>
+    <use href="#ln-path-d"/>
+  </g>
+  <g stroke="#D8FF9E" stroke-opacity=".12" stroke-width="5" filter="url(#ln-glow)">
+    <use href="#ln-path-a"/>
+    <use href="#ln-path-b"/>
+    <use href="#ln-path-c"/>
+    <use href="#ln-path-d"/>
+  </g>
+
+  <circle class="ln-packet" r="4" fill="#D8FF9E" style="offset-path:path('M159 97C220 96 242 121 286 147')"/>
+  <circle class="ln-packet ln-packet-b" r="4" fill="#D8FF9E" style="offset-path:path('M481 97C420 96 398 121 354 147')"/>
+  <circle class="ln-packet ln-packet-c" r="4" fill="#D8FF9E" style="offset-path:path('M159 223C220 224 242 199 286 173')"/>
+  <circle class="ln-packet ln-packet-d" r="4" fill="#D8FF9E" style="offset-path:path('M481 223C420 224 398 199 354 173')"/>
+
+  <g filter="url(#ln-shadow)">
+    <circle class="ln-core-ring" cx="320" cy="160" r="39" stroke="#B7F56A" stroke-opacity=".55"/>
+    <circle cx="320" cy="160" r="33" fill="#121D19" stroke="#B7F56A" stroke-opacity=".7"/>
+    <path d="M303 153h10l5 7-5 7h-10c-4 0-7-3-7-7s3-7 7-7Zm34 0h-10l-5 7 5 7h10c4 0 7-3 7-7s-3-7-7-7Z" stroke="#D8FF9E" stroke-width="2"/>
+    <circle cx="320" cy="160" r="3" fill="#B7F56A"/>
+  </g>
+
+  <g filter="url(#ln-shadow)">
+    <g transform="translate(65 65)">
+      <path d="M8 18C10 7 19 0 30 0h68c11 0 20 7 22 18l5 28c2 9-5 18-15 18H98c-7 0-13-4-16-10l-2-5H48l-2 5c-3 6-9 10-16 10H18C8 64 1 55 3 46l5-28Z" fill="url(#ln-node)" stroke="#B7F56A" stroke-opacity=".58"/>
+      <rect x="39" y="10" width="50" height="30" rx="5" fill="#07100D" stroke="#B7F56A" stroke-opacity=".31"/>
+      <path d="M45 16h38v18H45z" fill="#B7F56A" fill-opacity=".1"/>
+      <path d="M18 29h14M25 22v14" stroke="#D8FF9E" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="105" cy="25" r="4" fill="#B7F56A" fill-opacity=".8"/>
+      <circle cx="112" cy="34" r="4" fill="#B7F56A" fill-opacity=".45"/>
+      <circle class="ln-led" cx="94" cy="13" r="2.5" fill="#B7F56A"/>
+    </g>
+    <g transform="translate(450 65)">
+      <path d="M8 18C10 7 19 0 30 0h68c11 0 20 7 22 18l5 28c2 9-5 18-15 18H98c-7 0-13-4-16-10l-2-5H48l-2 5c-3 6-9 10-16 10H18C8 64 1 55 3 46l5-28Z" fill="url(#ln-node)" stroke="#B7F56A" stroke-opacity=".58"/>
+      <rect x="39" y="10" width="50" height="30" rx="5" fill="#07100D" stroke="#B7F56A" stroke-opacity=".31"/>
+      <path d="M45 16h38v18H45z" fill="#B7F56A" fill-opacity=".1"/>
+      <path d="M18 29h14M25 22v14" stroke="#D8FF9E" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="105" cy="25" r="4" fill="#B7F56A" fill-opacity=".8"/>
+      <circle cx="112" cy="34" r="4" fill="#B7F56A" fill-opacity=".45"/>
+      <circle class="ln-led" cx="94" cy="13" r="2.5" fill="#B7F56A" style="animation-delay:-.45s"/>
+    </g>
+    <g transform="translate(65 191)">
+      <path d="M8 18C10 7 19 0 30 0h68c11 0 20 7 22 18l5 28c2 9-5 18-15 18H98c-7 0-13-4-16-10l-2-5H48l-2 5c-3 6-9 10-16 10H18C8 64 1 55 3 46l5-28Z" fill="url(#ln-node)" stroke="#B7F56A" stroke-opacity=".58"/>
+      <rect x="39" y="10" width="50" height="30" rx="5" fill="#07100D" stroke="#B7F56A" stroke-opacity=".31"/>
+      <path d="M45 16h38v18H45z" fill="#B7F56A" fill-opacity=".1"/>
+      <path d="M18 29h14M25 22v14" stroke="#D8FF9E" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="105" cy="25" r="4" fill="#B7F56A" fill-opacity=".8"/>
+      <circle cx="112" cy="34" r="4" fill="#B7F56A" fill-opacity=".45"/>
+      <circle class="ln-led" cx="94" cy="13" r="2.5" fill="#B7F56A" style="animation-delay:-.9s"/>
+    </g>
+    <g transform="translate(450 191)">
+      <path d="M8 18C10 7 19 0 30 0h68c11 0 20 7 22 18l5 28c2 9-5 18-15 18H98c-7 0-13-4-16-10l-2-5H48l-2 5c-3 6-9 10-16 10H18C8 64 1 55 3 46l5-28Z" fill="url(#ln-node)" stroke="#B7F56A" stroke-opacity=".58"/>
+      <rect x="39" y="10" width="50" height="30" rx="5" fill="#07100D" stroke="#B7F56A" stroke-opacity=".31"/>
+      <path d="M45 16h38v18H45z" fill="#B7F56A" fill-opacity=".1"/>
+      <path d="M18 29h14M25 22v14" stroke="#D8FF9E" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="105" cy="25" r="4" fill="#B7F56A" fill-opacity=".8"/>
+      <circle cx="112" cy="34" r="4" fill="#B7F56A" fill-opacity=".45"/>
+      <circle class="ln-led" cx="94" cy="13" r="2.5" fill="#B7F56A" style="animation-delay:-1.35s"/>
+    </g>
+  </g>
+</svg>
