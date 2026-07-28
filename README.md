@@ -1,15 +1,15 @@
-# SplitGBA
+# SplitEmu
 
 **Four-player split-screen Game Boy Advance emulation on one screen — with a
 working link cable, a shared race timer, and a global speed control (1x–4x).**
 
 Deutsche Anleitung: [README.de.md](README.de.md)
 
-![SplitGBA running four linked instances in a 2x2 grid](docs/screenshot.png)
+![SplitEmu running four linked instances in a 2x2 grid](docs/screenshot.png)
 
 ## What is this?
 
-SplitGBA is a small native frontend built around the
+SplitEmu is a small native frontend built around the
 [mGBA](https://mgba.io) emulator core. It runs **up to four GBA instances in
 a single window**, laid out like couch-multiplayer split-screen, and connects
 all of them through mGBA's lockstep serial emulation — the same mechanism the
@@ -44,16 +44,16 @@ no second screen, no phones.
 ## Download
 
 Prebuilt packages for every release are on the
-[releases page](https://github.com/JosipFX/splitgba/releases):
+[releases page](https://github.com/JosipFX/splitemu/releases):
 
 | Platform | Package |
 |---|---|
-| **macOS** (Apple Silicon + Intel) | `SplitGBA-<v>-macos.dmg` — drag the app to Applications. First launch: right-click → *Open* (unsigned open-source app) |
-| **Windows** (64-bit) | `SplitGBA-<v>-windows-setup.exe` installer, or the portable `.zip` |
-| **Linux** (x86_64) | `SplitGBA-<v>-linux-x86_64.AppImage` (`chmod +x`, run) or the `.tar.gz` |
+| **macOS** (Apple Silicon + Intel) | `SplitEmu-<v>-macos.dmg` — drag the app to Applications. First launch: right-click → *Open* (unsigned open-source app) |
+| **Windows** (64-bit) | `SplitEmu-<v>-windows-setup.exe` installer, or the portable `.zip` |
+| **Linux** (x86_64) | `SplitEmu-<v>-linux-x86_64.AppImage` (`chmod +x`, run) or the `.tar.gz` |
 
 Put your ROM dumps either in a `roms/` folder next to where you launch, or
-in a `SplitGBA/` folder inside your home directory — the launcher finds
+in a `SplitEmu/` folder inside your home directory — the launcher finds
 both.
 
 ## Building from source
@@ -65,8 +65,8 @@ Requirements: a C/C++ toolchain, CMake ≥ 3.20 and SDL2
 (`brew install cmake sdl2` / `apt install cmake libsdl2-dev`).
 
 ```bash
-git clone --recursive https://github.com/JosipFX/splitgba.git
-cd splitgba
+git clone --recursive https://github.com/JosipFX/splitemu.git
+cd splitemu
 ./build.sh
 ```
 
@@ -74,7 +74,7 @@ The mGBA core is embedded as a git submodule and built automatically as a
 static library — no mGBA installation needed. If you cloned without
 `--recursive`, `build.sh` fetches the submodule for you.
 
-Result: `./build/splitgba`
+Result: `./build/splitemu`
 
 ## Usage
 
@@ -83,20 +83,20 @@ a ROM per player (from the `roms/` directory), set the player count (1–4)
 and enter names. The selection is remembered for next time.
 
 ```bash
-./build/splitgba
+./build/splitemu
 ```
 
 Or directly from the command line:
 
 ```bash
 # Four different cartridges (e.g. for trading between versions):
-./build/splitgba -f firered.gba leafgreen.gba ruby.gba emerald.gba
+./build/splitemu -f firered.gba leafgreen.gba ruby.gba emerald.gba
 
 # Four copies of the same game — race mode! Each player gets their own save:
-./build/splitgba -f -n 4 firered.gba
+./build/splitemu -f -n 4 firered.gba
 
 # Load up to four .gba files from a directory (alphabetical):
-./build/splitgba -f roms/
+./build/splitemu -f roms/
 ```
 
 `-f` starts fullscreen — that is what you want on a TV.
@@ -122,7 +122,7 @@ keyboard **or** any controller (d-pad + A/B):
 - Speed, HUD, smoothing, fullscreen, quit
 - **Controls overview**: every keyboard and controller binding on one page
 
-All settings persist in `~/.config/splitgba.ini`.
+All settings persist in `~/.config/splitemu.ini`.
 
 ### Hotkeys
 
@@ -140,7 +140,7 @@ All settings persist in `~/.config/splitgba.ini`.
 | `F` | toggle fullscreen |
 | `H` | toggle HUD |
 
-Quit via the menu (`Esc` → "SplitGBA beenden") or `Cmd`+`Q`.
+Quit via the menu (`Esc` → "SplitEmu beenden") or `Cmd`+`Q`.
 
 ### Controllers
 
@@ -159,8 +159,8 @@ is present in the working directory it is loaded automatically.
 Nintendo Switch Pro Controllers are supported natively through SDL's HIDAPI
 driver, over USB-C or Bluetooth, no extra files needed. Button labels are
 respected: the button labeled **A acts as GBA A**. Run
-`./build/splitgba --list-pads` to quickly check that all controllers are
-detected, and `./build/splitgba roms-test/` for a full input test — each
+`./build/splitemu --list-pads` to quickly check that all controllers are
+detected, and `./build/splitemu roms-test/` for a full input test — each
 panel flashes white while a button is held on its controller.
 
 ### Trading and battling (Pokémon)
@@ -188,7 +188,7 @@ Practical tips:
 
 ### Race mode
 
-1. `./build/splitgba -f -n 4 game.gba`
+1. `./build/splitemu -f -n 4 game.gba`
 2. Everyone ready? `Shift`+`R` — all four games reboot in sync.
 3. `Space` starts the shared timer.
 4. Agree on a speed (`2` makes long grinds bearable) — it always applies to
@@ -202,7 +202,7 @@ handy for checking layout and input assignment):
 
 ```bash
 python3 tools/make_test_rom.py
-./build/splitgba roms-test/
+./build/splitemu roms-test/
 ```
 
 For development there are two headless flags: `--screenshot out.bmp
@@ -219,12 +219,12 @@ branch `main`, folder `/docs`).
 
 ## Legal
 
-SplitGBA contains **no games** and downloads none. Use only ROM files you
+SplitEmu contains **no games** and downloads none. Use only ROM files you
 dumped from cartridges you own. Nintendo, Game Boy Advance and Pokémon are
 trademarks of their respective owners; this project is not affiliated with
 or endorsed by them in any way.
 
-SplitGBA's own code is licensed under the [MIT License](LICENSE). The
+SplitEmu's own code is licensed under the [MIT License](LICENSE). The
 embedded mGBA core (`third_party/mgba`, git submodule) is licensed under the
 Mozilla Public License 2.0 — full credit to [endrift and the mGBA
 contributors](https://github.com/mgba-emu/mgba); this tool is a thin

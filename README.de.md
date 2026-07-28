@@ -1,11 +1,11 @@
-# SplitGBA — Deutsche Anleitung
+# SplitEmu — Deutsche Anleitung
 
 **4-Spieler-Splitscreen-GBA-Emulator für den Fernseher** — mit Link-Kabel,
 Race-Timer und globaler Tempo-Regelung (1x–4x).
 
 English README: [README.md](README.md)
 
-![SplitGBA mit vier verlinkten Instanzen im 2x2-Raster](docs/screenshot.png)
+![SplitEmu mit vier verlinkten Instanzen im 2x2-Raster](docs/screenshot.png)
 
 Gedacht für Pokémon-Abende mit Freunden: alle sehen den Stand der anderen,
 ihr könnt auf Zeit spielen, das Tempo hochdrehen und dank emuliertem
@@ -19,16 +19,16 @@ denselben Lockstep-Mechanismus wie das offizielle mGBA-Multiplayer-Feature.
 ## Download (fertige Pakete)
 
 Für jedes Release gibt es fertige Pakete auf der
-[Releases-Seite](https://github.com/JosipFX/splitgba/releases):
+[Releases-Seite](https://github.com/JosipFX/splitemu/releases):
 
 | Plattform | Paket |
 |---|---|
-| **macOS** (Apple Silicon + Intel) | `SplitGBA-<v>-macos.dmg` — App in „Programme" ziehen. Erster Start: Rechtsklick → *Öffnen* (unsignierte Open-Source-App) |
-| **Windows** (64-bit) | `SplitGBA-<v>-windows-setup.exe` (Installer) oder das portable `.zip` |
-| **Linux** (x86_64) | `SplitGBA-<v>-linux-x86_64.AppImage` (`chmod +x`, starten) oder das `.tar.gz` |
+| **macOS** (Apple Silicon + Intel) | `SplitEmu-<v>-macos.dmg` — App in „Programme" ziehen. Erster Start: Rechtsklick → *Öffnen* (unsignierte Open-Source-App) |
+| **Windows** (64-bit) | `SplitEmu-<v>-windows-setup.exe` (Installer) oder das portable `.zip` |
+| **Linux** (x86_64) | `SplitEmu-<v>-linux-x86_64.AppImage` (`chmod +x`, starten) oder das `.tar.gz` |
 
 ROM-Dumps entweder in einen Ordner `roms/` neben dem Startort legen oder in
-den Ordner `SplitGBA/` im Benutzerverzeichnis — das Startmenü findet beide.
+den Ordner `SplitEmu/` im Benutzerverzeichnis — das Startmenü findet beide.
 
 ## Selbst bauen
 
@@ -36,13 +36,13 @@ Einmalig nötig: Xcode Command Line Tools sowie [Homebrew](https://brew.sh)
 mit `cmake` und `sdl2` (`brew install cmake sdl2`).
 
 ```bash
-git clone --recursive https://github.com/JosipFX/splitgba.git
-cd splitgba
+git clone --recursive https://github.com/JosipFX/splitemu.git
+cd splitemu
 ./build.sh
 ```
 
 Der mGBA-Core liegt als Git-Submodule bei und wird automatisch als statische
-Bibliothek mitgebaut. Ergebnis: `./build/splitgba`
+Bibliothek mitgebaut. Ergebnis: `./build/splitemu`
 
 ## Starten
 
@@ -51,24 +51,24 @@ ROM pro Spieler wählen (aus dem `roms/`-Ordner), Spielerzahl 1–4 festlegen,
 Namen eintragen, „Starten". Die Auswahl wird fürs nächste Mal gemerkt.
 
 ```bash
-./build/splitgba
+./build/splitemu
 ```
 
 Oder direkt per Kommandozeile:
 
 ```bash
 # 4 verschiedene Editionen (z.B. zum Tauschen):
-./build/splitgba -f feuerrot.gba blattgruen.gba rubin.gba smaragd.gba
+./build/splitemu -f feuerrot.gba blattgruen.gba rubin.gba smaragd.gba
 
 # 4x dasselbe Spiel — Wettrennen! Jeder Spieler bekommt einen eigenen Spielstand:
-./build/splitgba -f -n 4 feuerrot.gba
+./build/splitemu -f -n 4 feuerrot.gba
 
 # Alle .gba-Dateien aus einem Ordner (alphabetisch, max. 4):
-./build/splitgba -f roms/
+./build/splitemu -f roms/
 
 # Zum Ausprobieren ohne echte ROMs (bunte Testbildschirme):
 python3 tools/make_test_rom.py
-./build/splitgba roms-test/
+./build/splitemu roms-test/
 ```
 
 `-f` startet direkt im Vollbild — das wollt ihr am TV.
@@ -96,7 +96,7 @@ Tastatur **oder** Controller (D-Pad + A/B):
 - Tempo, HUD, Glättung, Vollbild, Beenden
 - **Steuerung anzeigen**: Übersicht aller Tasten- und Controller-Belegungen
 
-Alle Einstellungen werden in `~/.config/splitgba.ini` gespeichert und beim
+Alle Einstellungen werden in `~/.config/splitemu.ini` gespeichert und beim
 nächsten Start automatisch geladen.
 
 ## Tasten (Hotkeys für alle)
@@ -115,7 +115,7 @@ nächsten Start automatisch geladen.
 | `F` | Vollbild an/aus |
 | `H` | Anzeigen (HUD) ein/aus |
 
-Beenden: übers Menü (`Esc` → „SplitGBA beenden") oder `Cmd`+`Q`.
+Beenden: übers Menü (`Esc` → „SplitEmu beenden") oder `Cmd`+`Q`.
 
 ## Controller
 
@@ -147,10 +147,10 @@ fühlt sich also genau wie am GBA an.
 Schnelltest, ob alle Controller erkannt sind:
 
 ```bash
-./build/splitgba --list-pads
+./build/splitemu --list-pads
 ```
 
-Kompletter Probelauf ohne echte Spiele: `./build/splitgba roms-test/` —
+Kompletter Probelauf ohne echte Spiele: `./build/splitemu roms-test/` —
 jede Kachel blinkt weiß, sobald auf dem zugehörigen Controller ein Knopf
 gedrückt wird.
 
@@ -179,7 +179,7 @@ Tipps:
 
 ## Race-Modus (auf Zeit spielen)
 
-1. `./build/splitgba -f -n 4 spiel.gba`
+1. `./build/splitemu -f -n 4 spiel.gba`
 2. Alle bereit? `Shift`+`R` — alle Spiele starten synchron neu.
 3. `Leertaste` startet den Timer (läuft groß im HUD mit, bei 3 Spielern
    in der freien Bildschirm-Ecke).

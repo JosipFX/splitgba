@@ -31,4 +31,4 @@ jobs:
       - name: Smoke-Test
         run: |
           python3 tools/make_test_rom.py roms-test
-          SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy ./build/splitgba --screenshot smoke.bmp --frames 60 roms-test/test_p1.gba roms-test/test_p2.gba
+          SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy ./build/splitemu --screenshot smoke.bmp --frames 60 roms-test/test_p1.gba roms-test/test_p2.gba

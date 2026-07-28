@@ -1,4 +1,4 @@
-// SplitGBA — 4-Spieler-Splitscreen-GBA-Frontend fuer den TV.
+// SplitEmu — 4-Spieler-Splitscreen-GBA-Frontend fuer den TV.
 //
 // Basiert auf libmgba (mGBA-Core). Alle Instanzen laufen in einem Fenster
 // (2x2-Raster), sind ueber mGBAs Lockstep-Link verbunden (Link-Kabel fuer
@@ -108,7 +108,7 @@ struct App {
 	uint64_t timerAccumMs = 0;
 	uint64_t timerStartTick = 0;
 
-	// Einstellungen (Menue, persistiert in ~/.config/splitgba.ini)
+	// Einstellungen (Menue, persistiert in ~/.config/splitemu.ini)
 	std::atomic<int> lang{0};  // 0 = Englisch (Standard), 1 = Deutsch
 	std::string playerName[MAX_PLAYERS];
 	std::atomic<int> playerVol[MAX_PLAYERS] = {100, 100, 100, 100};  // Prozent, 0-150
@@ -508,7 +508,7 @@ static bool bootPlayer(Player& p, int index, const std::string& rom, bool dupRom
 		return false;
 	}
 
-	mCoreInitConfig(p.core, "splitgba");
+	mCoreInitConfig(p.core, "splitemu");
 	struct mCoreOptions opts = {};
 	opts.useBios = true;
 	opts.audioBuffers = 1024;
@@ -855,23 +855,37 @@ static void togglePause() {
 }
 
 // ---------------------------------------------------------------------------
-// Einstellungen: Laden/Speichern (~/.config/splitgba.ini)
+// Einstellungen: Laden/Speichern (~/.config/splitemu.ini)
 
 static std::string settingsPath() {
 #ifdef _WIN32
 	const char* base = getenv("APPDATA");
-	fs::path dir = fs::path(base ? base : ".") / "splitgba";
+	fs::path dir = fs::path(base ? base : ".") / "splitemu";
 #else
 	const char* home = getenv("HOME");
 	fs::path dir = fs::path(home ? home : ".") / ".config";
 #endif
 	std::error_code ec;
 	fs::create_directories(dir, ec);
-	return (dir / "splitgba.ini").string();
+	return (dir / "splitemu.ini").string();
+}
+
+static std::string legacySettingsPath() {
+	// Vor der Umbenennung hiess das Projekt SplitGBA
+#ifdef _WIN32
+	const char* base = getenv("APPDATA");
+	return (fs::path(base ? base : ".") / "splitgba" / "splitgba.ini").string();
+#else
+	const char* home = getenv("HOME");
+	return (fs::path(home ? home : ".") / ".config" / "splitgba.ini").string();
+#endif
 }
 
 static void loadSettings() {
 	FILE* f = fopen(settingsPath().c_str(), "r");
+	if (!f) {
+		f = fopen(legacySettingsPath().c_str(), "r");
+	}
 	if (!f) {
 		return;
 	}
@@ -1666,7 +1680,8 @@ static void scanRoms() {
 #endif
 	if (home) {
 		// fuer App-Bundle-Nutzer ohne Terminal: fester Ordner im Benutzerverzeichnis
-		dirs.push_back((fs::path(home) / "SplitGBA").string());
+		dirs.push_back((fs::path(home) / "SplitEmu").string());
+		dirs.push_back((fs::path(home) / "SplitGBA").string());  // alter Name
 	}
 	for (const std::string& dirname : dirs) {
 		std::error_code ec;
@@ -1757,7 +1772,7 @@ static void drawLauncher(int outW, int outH) {
 	SDL_RenderClear(g_app.renderer);
 
 	int titleScale = std::max(4, outH / 120);
-	std::string title = "SPLITGBA";
+	std::string title = "SPLITEMU";
 	drawText(title, (outW - textWidth(title, titleScale)) / 2, outH / 12, titleScale,
 	         120, 200, 255);
 	std::string sub = tr(S_LAUNCH_SUB);
@@ -1855,7 +1870,7 @@ static bool runLauncher(std::vector<std::string>* romsOut) {
 	scanRoms();
 
 	// Debug: Startmenue einmal rendern, als BMP sichern, beenden
-	if (const char* shotPath = getenv("SPLITGBA_LAUNCHER_SHOT")) {
+	if (const char* shotPath = getenv("SPLITEMU_LAUNCHER_SHOT")) {
 		// angeschlossene Controller noch einholen (Device-Events aus der Queue)
 		SDL_Event ev;
 		while (SDL_PollEvent(&ev)) {
@@ -1865,10 +1880,10 @@ static bool runLauncher(std::vector<std::string>* romsOut) {
 		}
 		int outW, outH;
 		SDL_GetRendererOutputSize(g_app.renderer, &outW, &outH);
-		if (getenv("SPLITGBA_LAUNCHER_SHOT_HELP")) {
+		if (getenv("SPLITEMU_LAUNCHER_SHOT_HELP")) {
 			g_app.helpOpen = true;
 		}
-		if (getenv("SPLITGBA_LAUNCHER_SHOT_PADS")) {
+		if (getenv("SPLITEMU_LAUNCHER_SHOT_PADS")) {
 			g_app.padAssignOpen = true;
 		}
 		drawLauncher(outW, outH);
@@ -2083,7 +2098,7 @@ struct Args {
 };
 
 static void usage(const char* argv0) {
-	printf("SplitGBA — four-player split-screen GBA emulator with link cable\n\n");
+	printf("SplitEmu — four-player split-screen GBA emulator with link cable\n\n");
 	printf("Usage: %s [options] ROM1 [ROM2 ROM3 ROM4]\n", argv0);
 	printf("       %s [options] <folder-with-roms>\n", argv0);
 	printf("       %s                        (opens the launcher screen)\n", argv0);
@@ -2358,7 +2373,7 @@ int main(int argc, char** argv) {
 		loadScript(args.scriptPath);
 	}
 	bool hiddenUi =
-	    screenshotMode || recording || getenv("SPLITGBA_LAUNCHER_SHOT") != nullptr;
+	    screenshotMode || recording || getenv("SPLITEMU_LAUNCHER_SHOT") != nullptr;
 	uint32_t winFlags = SDL_WINDOW_RESIZABLE;
 	if (!recording) {
 		winFlags |= SDL_WINDOW_ALLOW_HIGHDPI;  // bei Aufnahme: exakt 1280x720 Pixel
@@ -2368,7 +2383,7 @@ int main(int argc, char** argv) {
 	} else if (args.fullscreen) {
 		winFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 	}
-	g_app.window = SDL_CreateWindow("SplitGBA", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+	g_app.window = SDL_CreateWindow("SplitEmu", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 	                                recording ? 1280 : 1600, recording ? 720 : 900, winFlags);
 	if (!g_app.window) {
 		fprintf(stderr, "Fenster konnte nicht erstellt werden: %s\n", SDL_GetError());
@@ -2457,7 +2472,7 @@ int main(int argc, char** argv) {
 		SDL_PauseAudioDevice(g_app.audioDev, 0);
 	}
 
-	printf("SplitGBA laeuft: %d Spieler%s, Tempo %gx\n", g_app.numPlayers,
+	printf("SplitEmu laeuft: %d Spieler%s, Tempo %gx\n", g_app.numPlayers,
 	       g_app.linked ? ", Link-Kabel aktiv" : "", currentSpeed());
 
 	if (screenshotMode) {
@@ -2606,7 +2621,7 @@ int main(int argc, char** argv) {
 	}
 
 	saveSettings();
-	if (getenv("SPLITGBA_DEBUG_SYNC")) {
+	if (getenv("SPLITEMU_DEBUG_SYNC")) {
 		printf("DEBUG audioOk=%d freq=%d samples=%d fmt=%d\n", g_app.audioOk,
 		       g_app.audioSpec.freq, g_app.audioSpec.samples, (int)g_app.audioSpec.format);
 		for (int i = 0; i < g_app.numPlayers; ++i) {

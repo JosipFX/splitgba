@@ -48,21 +48,21 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           mkdir -p dist
           # tar.gz
-          mkdir -p stage/SplitGBA
-          cp build-release/splitgba README.md README.de.md LICENSE stage/SplitGBA/
-          cp packaging/linux/splitgba.desktop packaging/icons/icon_512.png stage/SplitGBA/
-          tar czf "dist/SplitGBA-$VERSION-linux-x86_64.tar.gz" -C stage SplitGBA
+          mkdir -p stage/SplitEmu
+          cp build-release/splitemu README.md README.de.md LICENSE stage/SplitEmu/
+          cp packaging/linux/splitemu.desktop packaging/icons/icon_512.png stage/SplitEmu/
+          tar czf "dist/SplitEmu-$VERSION-linux-x86_64.tar.gz" -C stage SplitEmu
           # AppImage
           mkdir -p AppDir/usr/bin AppDir/usr/share/applications \
                    AppDir/usr/share/icons/hicolor/512x512/apps
-          cp build-release/splitgba AppDir/usr/bin/
-          cp packaging/linux/splitgba.desktop AppDir/usr/share/applications/
-          cp packaging/icons/icon_512.png AppDir/usr/share/icons/hicolor/512x512/apps/splitgba.png
+          cp build-release/splitemu AppDir/usr/bin/
+          cp packaging/linux/splitemu.desktop AppDir/usr/share/applications/
+          cp packaging/icons/icon_512.png AppDir/usr/share/icons/hicolor/512x512/apps/splitemu.png
           curl -fsSL -o linuxdeploy \
             https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
           chmod +x linuxdeploy
           APPIMAGE_EXTRACT_AND_RUN=1 ./linuxdeploy --appdir AppDir --output appimage
-          mv SplitGBA*.AppImage "dist/SplitGBA-$VERSION-linux-x86_64.AppImage"
+          mv SplitEmu*.AppImage "dist/SplitEmu-$VERSION-linux-x86_64.AppImage"
       - uses: actions/upload-artifact@v4
         with:
           name: linux
@@ -100,9 +100,9 @@ jobs:
         run: |
           $version = "$env:GITHUB_REF_NAME".TrimStart("v")
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          New-Item -ItemType Directory -Force -Path stage\SplitGBA | Out-Null
-          Copy-Item build-release\splitgba.exe,README.md,README.de.md,LICENSE stage\SplitGBA\
-          Compress-Archive -Path stage\SplitGBA -DestinationPath "dist\SplitGBA-$version-windows-portable.zip" -Force
+          New-Item -ItemType Directory -Force -Path stage\SplitEmu | Out-Null
+          Copy-Item build-release\splitemu.exe,README.md,README.de.md,LICENSE stage\SplitEmu\
+          Compress-Archive -Path stage\SplitEmu -DestinationPath "dist\SplitEmu-$version-windows-portable.zip" -Force
       - uses: actions/upload-artifact@v4
         with:
           name: windows

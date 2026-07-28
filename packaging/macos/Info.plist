@@ -3,19 +3,19 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleName</key>
-	<string>SplitGBA</string>
+	<string>SplitEmu</string>
 	<key>CFBundleDisplayName</key>
-	<string>SplitGBA</string>
+	<string>SplitEmu</string>
 	<key>CFBundleIdentifier</key>
-	<string>io.github.josipfx.splitgba</string>
+	<string>io.github.josipfx.splitemu</string>
 	<key>CFBundleVersion</key>
 	<string>@VERSION@</string>
 	<key>CFBundleShortVersionString</key>
 	<string>@VERSION@</string>
 	<key>CFBundleExecutable</key>
-	<string>splitgba</string>
+	<string>splitemu</string>
 	<key>CFBundleIconFile</key>
-	<string>splitgba</string>
+	<string>splitemu</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>LSMinimumSystemVersion</key>
@@ -23,6 +23,6 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>MIT License — https://github.com/JosipFX/splitgba</string>
+	<string>MIT License — https://github.com/JosipFX/splitemu</string>
 </dict>
 </plist>

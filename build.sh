@@ -1,5 +1,5 @@
 #!/bin/sh
-# Baut SplitGBA (Release). Ergebnis: build/splitgba
+# Baut SplitEmu (Release). Ergebnis: build/splitemu
 set -e
 cd "$(dirname "$0")"
 
@@ -11,4 +11,4 @@ fi
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j "$(sysctl -n hw.ncpu 2>/dev/null || nproc)"
 echo
-echo "Fertig: ./build/splitgba"
+echo "Fertig: ./build/splitemu"

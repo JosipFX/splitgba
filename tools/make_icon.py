@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Erzeugt das SplitGBA-App-Icon in allen benoetigten Formaten.
+"""Erzeugt das SplitEmu-App-Icon in allen benoetigten Formaten.
 
 Reines Python (zlib/struct aus der Standardbibliothek, kein PIL):
 - packaging/icons/icon_<n>.png   (Linux/AppImage, Quellbilder)
 - packaging/icons/icon.ico       (Windows, 256px PNG-basiert)
-- packaging/icons/splitgba.icns  (macOS, via iconutil — nur auf macOS)
+- packaging/icons/splitemu.icns  (macOS, via iconutil — nur auf macOS)
 
 Motiv: dunkles, abgerundetes Quadrat mit 2x2 farbigen "Bildschirmen" —
 der 4-Spieler-Splitscreen als Icon.
@@ -121,7 +121,7 @@ def main():
     print(f"{outdir}/icon.ico geschrieben")
 
     if shutil.which("iconutil"):
-        iconset = os.path.join(outdir, "splitgba.iconset")
+        iconset = os.path.join(outdir, "splitemu.iconset")
         os.makedirs(iconset, exist_ok=True)
         mapping = {
             "icon_16x16.png": 16, "icon_16x16@2x.png": 32,
@@ -133,9 +133,9 @@ def main():
         for name, s in mapping.items():
             shutil.copyfile(pngs[s], os.path.join(iconset, name))
         subprocess.run(["iconutil", "-c", "icns", iconset, "-o",
-                        os.path.join(outdir, "splitgba.icns")], check=True)
+                        os.path.join(outdir, "splitemu.icns")], check=True)
         shutil.rmtree(iconset)
-        print(f"{outdir}/splitgba.icns geschrieben")
+        print(f"{outdir}/splitemu.icns geschrieben")
 
 
 if __name__ == "__main__":

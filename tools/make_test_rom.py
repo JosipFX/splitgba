@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Erzeugt Mini-GBA-Test-ROMs fuer SplitGBA.
+"""Erzeugt Mini-GBA-Test-ROMs fuer SplitEmu.
 
 Jedes ROM zeigt eine Vollbild-Farbflaeche (Mode 3). Solange irgendein
 Knopf gedrueckt ist, wird der Bildschirm weiss — damit laesst sich die
