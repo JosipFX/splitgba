@@ -167,7 +167,6 @@ code {
 .nav-download:focus-visible,
 .navlinks a:focus-visible,
 .language summary:focus-visible,
-.menu-button:focus-visible,
 .copy-command:focus-visible,
 .lightbox-close:focus-visible,
 .footer-links a:focus-visible,
@@ -208,12 +207,10 @@ code {
 }
 
 /* ---- Mono label scale: every small uppercase caption on the page ---- */
-.platform-note,
 .metric span,
 .link-stage > span,
 .build-card-top,
 .setup-step > span,
-.compat-table thead th,
 .legal h2 {
 	font-family: var(--mono);
 	font-size: var(--label);
@@ -224,9 +221,9 @@ code {
 
 .brand small,
 .system-pills span,
-.raceviz-chip,
 .tempoviz-label,
 .raceviz-lane > b,
+.compat-table thead th,
 .compat-badge,
 .compat-table tbody th[scope="row"] small {
 	font-family: var(--mono);
@@ -239,6 +236,8 @@ code {
 /* ---- Mono UI text: sentence case, no extra tracking ---- */
 .release-pill,
 .language summary,
+.nav-github,
+.star-count,
 .copy-command,
 .lightbox-close,
 .demo-caption,
@@ -298,18 +297,34 @@ code {
 	display: flex;
 	margin-left: auto;
 	align-items: center;
-	gap: 24px;
+	gap: 18px;
 }
 
-.navlinks > a:not(.nav-download) {
+/* GitHub star pill: octocat on the left, live star count on the right. */
+.nav-github {
+	display: inline-flex;
+	padding: 6px 12px;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-pill);
+	align-items: center;
+	gap: 8px;
+	background: var(--well);
 	color: var(--muted);
-	font-size: .83rem;
-	font-weight: 500;
-	transition: color var(--t-fast);
+	white-space: nowrap;
+	transition: border-color var(--t-fast), background var(--t-fast), color var(--t-fast);
 }
 
-.navlinks > a:not(.nav-download):hover {
+.nav-github:hover {
+	border-color: var(--line-high);
+	background: var(--surface-high);
 	color: var(--ink);
+}
+
+.nav-github svg {
+	width: 15px;
+	height: 15px;
+	flex: none;
+	fill: currentColor;
 }
 
 .language {
@@ -381,28 +396,6 @@ code {
 	border-color: var(--line-accent);
 	background: var(--tint-accent);
 	transform: translateY(-1px);
-}
-
-.menu-button {
-	display: none;
-	width: 38px;
-	height: 38px;
-	margin-left: auto;
-	border: 1px solid var(--line);
-	border-radius: var(--radius-xs);
-	background: transparent;
-	cursor: pointer;
-}
-
-.menu-button span,
-.menu-button::before,
-.menu-button::after {
-	display: block;
-	width: 16px;
-	height: 1px;
-	margin: 4px auto;
-	background: var(--ink);
-	content: "";
 }
 
 /* ==========================================================================
@@ -522,9 +515,33 @@ code {
 	text-wrap: balance;
 }
 
+/* Stage for the animated mini consoles. The pills below are the fallback that
+   stays visible until the WebGL scene marks the stage as live. */
+.hero-minis {
+	position: relative;
+	display: flex;
+	height: 96px;
+	margin-top: 22px;
+	align-items: center;
+	justify-content: center;
+}
+
+.hero-minis canvas {
+	position: absolute;
+	display: block;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	background: transparent;
+	pointer-events: none;
+}
+
+.hero-minis.is-live .system-pills {
+	display: none;
+}
+
 .system-pills {
 	display: flex;
-	margin-top: 22px;
 	justify-content: center;
 	gap: 9px;
 }
@@ -602,20 +619,6 @@ code {
 
 .button.primary:focus-visible {
 	box-shadow: 0 8px 30px rgba(195, 240, 255, .12), var(--focus-ring);
-}
-
-.github-stars[hidden] {
-	display: none;
-}
-
-.github-stars {
-	color: var(--amber);
-	font-family: var(--mono);
-}
-
-.platform-note {
-	margin-top: 18px;
-	color: var(--faint);
 }
 
 /* ---- Hero visual: display bezel around the recorded session ---- */
@@ -991,8 +994,6 @@ code {
 .raceviz-head {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
 }
 
 .raceviz-clock {
@@ -1028,12 +1029,12 @@ code {
 	display: block;
 	font-weight: inherit;
 	transform: translateY(-6em);
-	animation: rv-roll 10s steps(10, end) -4s infinite;
+	animation: rv-roll 3.5s steps(10, end) -1.4s infinite;
 }
 
 .rv-reel.tenths > b {
 	transform: translateY(-4em);
-	animation-duration: 1s;
+	animation-duration: .35s;
 }
 
 .rv-reel i {
@@ -1042,14 +1043,6 @@ code {
 	font-style: normal;
 	line-height: 1;
 	text-align: center;
-}
-
-.raceviz-chip {
-	padding: 5px 10px;
-	border: 1px solid var(--line);
-	border-radius: var(--radius-pill);
-	color: var(--faint);
-	white-space: nowrap;
 }
 
 .raceviz-elapsed {
@@ -1445,12 +1438,12 @@ code {
 	gap: var(--gap);
 }
 
-.compat-block,
-.compat-roadmap {
-	overflow: hidden;
+.compat-block {
+	min-width: 0;
+	padding: 24px 26px;
 	border: 1px solid var(--line);
-	border-radius: var(--radius);
-	background: var(--sheen), var(--surface-solid);
+	border-radius: var(--radius-lg);
+	background: var(--surface-solid);
 	box-shadow: var(--shadow-card);
 }
 
@@ -1459,23 +1452,22 @@ code {
 	align-items: baseline;
 	flex-wrap: wrap;
 	justify-content: space-between;
-	gap: 6px 22px;
-	padding: 22px 26px 18px;
-	border-bottom: 1px solid var(--line);
+	gap: 2px 24px;
+	margin-bottom: 6px;
 }
 
-.compat-block-head h3,
-.compat-roadmap-head h3 {
-	font-size: 1.06rem;
+.compat-block-head h3 {
+	font-size: 1.02rem;
 	font-weight: 600;
 	letter-spacing: -.02em;
 }
 
-.compat-block-head p,
-.compat-roadmap-head p {
+.compat-block-head p {
+	margin-left: auto;
 	color: var(--faint);
-	font-size: .82rem;
+	font-size: .78rem;
 	line-height: 1.5;
+	text-align: right;
 }
 
 .compat-scroll {
@@ -1487,33 +1479,44 @@ code {
 
 .compat-scroll:focus-visible {
 	outline: 2px solid var(--cyan-bright);
-	outline-offset: -2px;
+	outline-offset: 3px;
 }
 
 .compat-table {
 	width: 100%;
 	border-collapse: collapse;
-	font-size: .89rem;
+	font-size: .88rem;
 	text-align: left;
 }
 
+.compat-table th,
+.compat-table td {
+	padding: 13px 18px;
+	vertical-align: middle;
+}
+
+.compat-table th:first-child,
+.compat-table td:first-child {
+	padding-left: 0;
+}
+
+.compat-table th:last-child,
+.compat-table td:last-child {
+	padding-right: 0;
+}
+
 .compat-table thead th {
-	position: sticky;
-	z-index: 2;
-	top: 0;
-	padding: 13px 20px;
+	padding-top: 2px;
+	padding-bottom: 11px;
 	border-bottom: 1px solid var(--line);
-	background: var(--surface-raised);
 	color: var(--faint);
-	font-weight: 600;
+	vertical-align: bottom;
 	white-space: nowrap;
 }
 
 .compat-table tbody th,
 .compat-table tbody td {
-	padding: 17px 20px;
-	border-bottom: 1px solid rgba(148, 170, 198, .09);
-	vertical-align: middle;
+	border-bottom: 1px solid rgba(148, 170, 198, .1);
 }
 
 .compat-table tbody tr:last-child th,
@@ -1521,44 +1524,33 @@ code {
 	border-bottom: 0;
 }
 
+.compat-table thead th:first-child,
 .compat-table tbody th[scope="row"] {
 	position: sticky;
-	z-index: 1;
 	left: 0;
-	min-width: 232px;
 	background: var(--surface-solid);
-	color: var(--ink);
-	font-weight: 500;
-	line-height: 1.4;
-	transition: background var(--t-fast);
 }
 
 .compat-table thead th:first-child {
-	z-index: 3;
-	left: 0;
+	z-index: 2;
+}
+
+.compat-table tbody th[scope="row"] {
+	z-index: 1;
+	min-width: 224px;
+	color: var(--ink);
+	font-weight: 400;
+	line-height: 1.45;
 }
 
 .compat-table tbody th[scope="row"] small {
 	display: block;
-	margin-top: 3px;
+	margin-top: 4px;
 	color: var(--faint);
-	font-weight: 500;
 }
 
 .compat-table tbody td {
 	color: var(--muted);
-}
-
-.compat-table tbody tr {
-	transition: background var(--t-fast);
-}
-
-.compat-table tbody tr:hover {
-	background: var(--tint-hover);
-}
-
-.compat-table tbody tr:hover th[scope="row"] {
-	background: var(--surface-raised);
 }
 
 .compat-table:not(.compat-table-devices) thead th:not(:first-child),
@@ -1570,75 +1562,90 @@ code {
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
+}
+
+.compat-suggest {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 10px;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-pill);
 	color: var(--muted);
+	text-decoration: none;
+	transition: color var(--t-fast), border-color var(--t-fast);
+}
+
+.compat-suggest:hover {
+	border-color: var(--line-high);
+	color: var(--ink);
+}
+
+.compat-suggest svg {
+	width: 9px;
+	height: 9px;
+	flex: none;
+	fill: none;
+	stroke: currentColor;
+	stroke-linecap: round;
+	stroke-width: 2.2;
 }
 
 .compat-mark {
 	display: inline-flex;
-	width: 30px;
-	height: 30px;
+	width: 18px;
+	height: 18px;
 	align-items: center;
 	justify-content: center;
-	border: 1px solid;
-	border-radius: 50%;
 }
 
 .compat-mark svg {
-	width: 17px;
-	height: 17px;
+	width: 16px;
+	height: 16px;
 	fill: none;
 	stroke: currentColor;
 	stroke-linecap: round;
 	stroke-linejoin: round;
-	stroke-width: 2.1;
+	stroke-width: 2;
 }
 
 .compat-mark.is-yes {
-	border-color: rgba(183, 245, 106, .32);
-	background: rgba(183, 245, 106, .1);
-	color: var(--lime);
+	color: rgba(183, 245, 106, .8);
 }
 
-.compat-mark.is-no {
-	border-color: var(--line);
-	background: rgba(148, 170, 198, .05);
+.compat-mark.is-no,
+.compat-mark.is-open {
 	color: var(--faint);
+}
+
+.compat-mark.is-open i {
+	font-family: var(--mono);
+	font-size: .86rem;
+	font-style: normal;
 }
 
 .compat-badge {
 	display: inline-flex;
 	align-items: center;
-	padding: 5px 11px;
-	border: 1px solid var(--line);
+	padding: 3px 9px;
 	border-radius: var(--radius-pill);
-	background: rgba(148, 170, 198, .06);
+	background: rgba(148, 170, 198, .07);
 	color: var(--muted);
-	font-weight: 500;
 	white-space: nowrap;
 }
 
 .compat-badge.is-tested {
-	border-color: rgba(183, 245, 106, .34);
-	background: rgba(183, 245, 106, .1);
+	background: rgba(183, 245, 106, .09);
 	color: var(--lime);
 }
 
 .compat-badge.is-note {
-	border-color: rgba(255, 201, 107, .32);
 	background: rgba(255, 201, 107, .09);
 	color: var(--amber);
 }
 
-.compat-badge.is-next {
-	border-color: rgba(117, 231, 255, .34);
-	background: rgba(117, 231, 255, .1);
-	color: var(--cyan);
-}
-
 .compat-badge.is-soon {
-	border-style: dashed;
-	border-color: rgba(148, 170, 198, .28);
-	background: transparent;
+	background: rgba(148, 170, 198, .05);
 	color: var(--faint);
 }
 
@@ -1652,61 +1659,12 @@ code {
 }
 
 .compat-foot {
-	padding: 16px 26px 20px;
+	margin-top: 18px;
+	padding-top: 16px;
 	border-top: 1px solid var(--line);
 	color: var(--faint);
-	font-size: .8rem;
+	font-size: .78rem;
 	line-height: 1.6;
-}
-
-.compat-roadmap {
-	padding: 22px 26px;
-}
-
-.compat-roadmap-head {
-	display: flex;
-	align-items: baseline;
-	flex-wrap: wrap;
-	justify-content: space-between;
-	gap: 4px 22px;
-	margin-bottom: 16px;
-}
-
-.compat-roadmap-list {
-	display: grid;
-	gap: 10px;
-	grid-template-columns: repeat(auto-fit, minmax(232px, 1fr));
-	list-style: none;
-}
-
-.compat-roadmap-list li {
-	display: flex;
-	align-items: center;
-	flex-wrap: nowrap;
-	justify-content: space-between;
-	gap: 12px;
-	padding: 14px 16px;
-	border: 1px solid var(--line);
-	border-radius: var(--radius-sm);
-	background: var(--well);
-	transition: border-color var(--t-fast), background var(--t-fast);
-}
-
-.compat-roadmap-list li:hover {
-	border-color: var(--line-high);
-	background: rgba(8, 11, 17, .62);
-}
-
-.compat-roadmap-name {
-	min-width: 0;
-	color: var(--muted);
-	font-size: .88rem;
-	font-weight: 500;
-	line-height: 1.4;
-}
-
-.compat-roadmap-list .compat-badge {
-	flex: none;
 }
 
 /* ==========================================================================
@@ -2146,56 +2104,13 @@ code {
    14. Responsive
    ========================================================================== */
 
-@media (min-width: 901px) and (max-width: 1080px) {
-	.navlinks {
-		gap: 18px;
-	}
-}
-
 @media (max-width: 900px) {
+	.nav-inner {
+		gap: 16px;
+	}
+
 	.navlinks {
-		position: absolute;
-		top: 70px;
-		right: 24px;
-		left: 24px;
-		display: none;
-		padding: 14px 18px 18px;
-		border: 1px solid var(--line-high);
-		border-radius: var(--radius);
-		align-items: stretch;
-		flex-direction: column;
-		gap: 2px;
-		background: var(--surface-solid);
-		box-shadow: var(--shadow);
-	}
-
-	.navlinks.is-open {
-		display: flex;
-	}
-
-	.navlinks > a,
-	.nav-download {
-		padding: 8px 0;
-	}
-
-	.nav-download {
-		justify-content: center;
-		margin-top: 6px;
-		padding: 10px 14px;
-	}
-
-	.language {
-		padding: 7px 0;
-	}
-
-	.language-menu {
-		top: calc(100% + 2px);
-		right: auto;
-		left: 0;
-	}
-
-	.menu-button {
-		display: block;
+		gap: 12px;
 	}
 
 	.hero {
@@ -2258,13 +2173,34 @@ code {
 		width: min(100% - 32px, 1180px);
 	}
 
+	.nav-inner {
+		gap: 10px;
+	}
+
 	.navlinks {
-		right: 16px;
-		left: 16px;
+		gap: 8px;
 	}
 
 	.brand small {
 		display: none;
+	}
+
+	.brand {
+		gap: 8px;
+	}
+
+	.brand img {
+		width: 28px;
+		height: 28px;
+	}
+
+	.nav-github {
+		padding: 6px 9px;
+		gap: 6px;
+	}
+
+	.nav-download {
+		padding: 8px 10px;
 	}
 
 	.hero {
@@ -2280,7 +2216,8 @@ code {
 		font-size: .93rem;
 	}
 
-	.system-pills {
+	.hero-minis {
+		height: 80px;
 		margin-top: 18px;
 	}
 
@@ -2384,31 +2321,31 @@ code {
 		min-height: 320px;
 	}
 
-	.compat-block-head,
-	.compat-roadmap,
-	.compat-foot {
-		padding-inline: 18px;
+	.compat-block {
+		padding: 20px 18px;
+	}
+
+	.compat-block-head p {
+		margin-left: 0;
+		text-align: left;
 	}
 
 	.compat-table {
-		font-size: .84rem;
+		font-size: .83rem;
+	}
+
+	.compat-table th,
+	.compat-table td {
+		padding: 12px 14px;
 	}
 
 	.compat-table thead th {
-		padding-inline: 15px;
-	}
-
-	.compat-table tbody th,
-	.compat-table tbody td {
-		padding: 15px;
+		padding-top: 2px;
+		padding-bottom: 10px;
 	}
 
 	.compat-table tbody th[scope="row"] {
-		min-width: 178px;
-	}
-
-	.compat-roadmap-list {
-		grid-template-columns: 1fr;
+		min-width: 172px;
 	}
 
 	.setup-step {

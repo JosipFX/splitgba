@@ -53,13 +53,11 @@
 				<span>SplitEmu</span>
 				<small>open source</small>
 			</a>
-			<button class="menu-button" type="button" aria-label="Navigation öffnen" aria-expanded="false"><span></span></button>
 			<div class="navlinks">
-				<a href="#features">Features</a>
-				<a href="#showcase">Einblicke</a>
-				<a href="#link">GBA-Link</a>
-				<a href="#compatibility">Kompatibilität</a>
-				<a href="#start">Loslegen</a>
+				<a class="nav-github" href="https://github.com/JosipFX/splitemu" aria-label="SplitEmu auf GitHub">
+					<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .8a11.2 11.2 0 0 0-3.54 21.83c.56.1.76-.24.76-.54v-2.1c-3.13.68-3.79-1.33-3.79-1.33-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.69.08-.69 1.13.08 1.72 1.16 1.72 1.16 1 1.72 2.63 1.22 3.27.93.1-.73.39-1.22.71-1.5-2.5-.28-5.13-1.25-5.13-5.56 0-1.23.44-2.23 1.16-3.02-.12-.28-.5-1.43.11-2.98 0 0 .94-.3 3.08 1.15a10.7 10.7 0 0 1 5.61 0c2.14-1.45 3.08-1.15 3.08-1.15.61 1.55.23 2.7.11 2.98.72.79 1.16 1.79 1.16 3.02 0 4.32-2.63 5.27-5.14 5.55.4.35.76 1.03.76 2.08v3.1c0 .3.2.65.77.54A11.2 11.2 0 0 0 12 .8Z"/></svg>
+					<span data-star-count>GitHub</span>
+				</a>
 				<details class="language">
 					<summary aria-label="Sprache wechseln">
 						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h10M9 3v2m3 0c-1 4-4 7-8 9m3-5c1 2 3 4 6 5m2 6 4-10 4 10m-6-4h4"/></svg>
@@ -83,24 +81,26 @@
 					<a class="release-pill" href="https://github.com/JosipFX/splitemu/releases/latest">
 						<strong>Neu</strong> Jetzt mit NES &amp; SNES <span aria-hidden="true">→</span>
 					</a>
-					<h1>Vier Spiele.<br><span class="gradient-text">Ein Screen.</span></h1>
-					<p class="hero-lead">Der Open-Source-Emulator für den Spieleabend. GBA, NES und SNES mit bis zu vier Controllern Seite an Seite spielen: lokal, synchron und gemacht für den TV.</p>
-					<div class="system-pills" aria-label="Unterstützte Systeme">
-						<span><i class="system-dot gba"></i>GBA</span>
-						<span><i class="system-dot nes"></i>NES</span>
-						<span><i class="system-dot snes"></i>SNES</span>
+					<h1>Spieleabend,<br><span class="gradient-text">wie früher.</span></h1>
+					<p class="hero-lead">Der Open-Source-Emulator für Freunde auf einem Sofa. GBA, NES und SNES mit bis zu vier Controllern Seite an Seite spielen: lokal, synchron und gemacht für den TV.</p>
+					<div class="hero-minis" aria-label="Unterstützte Systeme: Game Boy Advance, NES und Super Nintendo">
+						<canvas id="mini-consoles" aria-hidden="true"></canvas>
+						<div class="system-pills" aria-hidden="true">
+							<span><i class="system-dot gba"></i>GBA</span>
+							<span><i class="system-dot nes"></i>NES</span>
+							<span><i class="system-dot snes"></i>SNES</span>
+						</div>
 					</div>
 					<div class="hero-actions">
 						<a class="button primary" href="https://github.com/JosipFX/splitemu/releases/latest">
 							<svg viewBox="0 0 24 24"><path d="M11 3h2v10.17l3.59-3.58L18 11l-6 6-6-6 1.41-1.41L11 13.17V3ZM5 19h14v2H5v-2Z"/></svg>
 							Neueste Version laden
 						</a>
-						<a class="button" href="https://github.com/JosipFX/splitemu">
+						<a class="button" href="https://github.com/JosipFX/splitemu" aria-label="SplitEmu auf GitHub">
 							<svg viewBox="0 0 24 24"><path d="M12 .8a11.2 11.2 0 0 0-3.54 21.83c.56.1.76-.24.76-.54v-2.1c-3.13.68-3.79-1.33-3.79-1.33-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.69.08-.69 1.13.08 1.72 1.16 1.72 1.16 1 1.72 2.63 1.22 3.27.93.1-.73.39-1.22.71-1.5-2.5-.28-5.13-1.25-5.13-5.56 0-1.23.44-2.23 1.16-3.02-.12-.28-.5-1.43.11-2.98 0 0 .94-.3 3.08 1.15a10.7 10.7 0 0 1 5.61 0c2.14-1.45 3.08-1.15 3.08-1.15.61 1.55.23 2.7.11 2.98.72.79 1.16 1.79 1.16 3.02 0 4.32-2.63 5.27-5.14 5.55.4.35.76 1.03.76 2.08v3.1c0 .3.2.65.77.54A11.2 11.2 0 0 0 12 .8Z"/></svg>
-							Quellcode <span class="github-stars" hidden>★ <span id="star-count"></span></span>
+							<span class="star-count" data-star-count>GitHub</span>
 						</a>
 					</div>
-					<p class="platform-note">KEIN ACCOUNT · KEINE CLOUD · DEINE ROMS BLEIBEN LOKAL</p>
 				</div>
 
 				<figure class="hero-visual">
@@ -196,7 +196,6 @@
 										<svg class="raceviz-icon" viewBox="0 0 24 24"><path d="M9.6 2.4h4.8M12 4.4v2.6M19.1 5.3l1.7 1.7M12 22.4a7.9 7.9 0 1 0 0-15.8 7.9 7.9 0 0 0 0 15.8Zm0-11.4v3.9"/></svg>
 										<span class="raceviz-time">00:0<span class="rv-reel"><b><i>0</i><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i><i>7</i><i>8</i><i>9</i></b></span>.<span class="rv-reel tenths"><b><i>0</i><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i><i>7</i><i>8</i><i>9</i></b></span></span>
 									</span>
-									<span class="raceviz-chip">SYNCHRONER START</span>
 								</div>
 								<div class="raceviz-elapsed"><i></i></div>
 								<div class="raceviz-lanes">
@@ -270,7 +269,7 @@
 
 		<section class="section" id="link">
 			<div class="shell link-layout reveal">
-				<div class="link-stage" role="img" aria-label="Vier GBA-Bildschirme, verbunden über einen zentralen Link-Bus">
+				<div class="link-stage" role="img" aria-label="Vier Game Boy Advance SP in den vier Pokemon-Editionsfarben, verbunden über einen zentralen Link-Hub">
 					<canvas id="link-scene"></canvas>
 					<svg class="link-fallback" viewBox="0 0 180 116" aria-hidden="true"><use href="#gba-device" width="180" height="116"/></svg>
 					<span>GBA LINK · 4 NODES · LOKAL</span>
@@ -294,17 +293,18 @@
 					<section class="compat-block reveal" aria-labelledby="compat-systems-title">
 						<div class="compat-block-head">
 							<h3 id="compat-systems-title">Funktionen pro System</h3>
-							<p>Der Link-Bus ist eine GBA-Funktion. NES und SNES bekommen alles andere.</p>
+							<p>Link-Kabel nur auf GBA.</p>
 						</div>
 						<div class="compat-scroll" role="region" tabindex="0" aria-label="Funktionsmatrix pro System, scrollbar">
 							<table class="compat-table">
-								<caption class="compat-sr">Welche SplitEmu-Funktionen auf GBA, NES und SNES verfügbar sind.</caption>
+								<caption class="compat-sr">Welche SplitEmu-Funktionen auf GBA, NES und SNES verfügbar sind, dazu eine Spalte für Vorschläge zur nächsten Konsole.</caption>
 								<thead>
 									<tr>
 										<th scope="col">Funktion</th>
 										<th scope="col"><span class="compat-sys"><i class="system-dot gba"></i>GBA</span></th>
 										<th scope="col"><span class="compat-sys"><i class="system-dot nes"></i>NES</span></th>
 										<th scope="col"><span class="compat-sys"><i class="system-dot snes"></i>SNES</span></th>
+										<th scope="col"><a class="compat-suggest" href="https://github.com/JosipFX/splitemu/issues/new?title=Console+suggestion%3A+&amp;body=Welche+Konsole+soll+SplitEmu+als+n%C3%A4chstes+emulieren%2C+und+warum%3F">Dein Vorschlag?<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 4.8v10.4M4.8 10h10.4"/></svg></a></th>
 									</tr>
 								</thead>
 								<tbody>
@@ -313,58 +313,52 @@
 										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
 										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
 										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+										<td><span class="compat-mark is-open"><i aria-hidden="true">?</i><span class="compat-sr">Offen für Vorschläge</span></span></td>
 									</tr>
 									<tr>
 										<th scope="row">Gemeinsames Tempo 1× bis 4×</th>
 										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
 										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
 										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+										<td><span class="compat-mark is-open"><i aria-hidden="true">?</i><span class="compat-sr">Offen für Vorschläge</span></span></td>
 									</tr>
 									<tr>
 										<th scope="row">Race-Timer und synchroner Neustart</th>
 										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
 										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
 										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+										<td><span class="compat-mark is-open"><i aria-hidden="true">?</i><span class="compat-sr">Offen für Vorschläge</span></span></td>
 									</tr>
 									<tr>
 										<th scope="row">Speicherstände für die ganze Session</th>
 										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
 										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
 										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+										<td><span class="compat-mark is-open"><i aria-hidden="true">?</i><span class="compat-sr">Offen für Vorschläge</span></span></td>
 									</tr>
 									<tr>
 										<th scope="row">Link-Kabel: Tauschen und Kämpfen<small>nur GBA</small></th>
 										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
 										<td><span class="compat-mark is-no"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M6.4 10h7.2"/></svg><span class="compat-sr">Nicht verfügbar</span></span></td>
 										<td><span class="compat-mark is-no"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M6.4 10h7.2"/></svg><span class="compat-sr">Nicht verfügbar</span></span></td>
+										<td><span class="compat-mark is-open"><i aria-hidden="true">?</i><span class="compat-sr">Offen für Vorschläge</span></span></td>
 									</tr>
 									<tr>
 										<th scope="row">Controller- und Tastatureingabe</th>
 										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
 										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
 										<td><span class="compat-mark is-yes"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m5.2 10.3 3.3 3.4 6.3-7"/></svg><span class="compat-sr">Verfügbar</span></span></td>
+										<td><span class="compat-mark is-open"><i aria-hidden="true">?</i><span class="compat-sr">Offen für Vorschläge</span></span></td>
 									</tr>
 								</tbody>
 							</table>
 						</div>
 					</section>
 
-					<section class="compat-roadmap reveal" aria-labelledby="compat-roadmap-title">
-						<div class="compat-roadmap-head">
-							<h3 id="compat-roadmap-title">Weitere Systeme auf der Roadmap</h3>
-							<p>Cores in Arbeit, ohne Versprechen zu Terminen.</p>
-						</div>
-						<ul class="compat-roadmap-list">
-							<li><span class="compat-roadmap-name">Game Boy und Game Boy Color</span><span class="compat-badge is-next">Als Nächstes</span></li>
-							<li><span class="compat-roadmap-name">Sega Mega Drive und Genesis</span><span class="compat-badge is-soon">Bald verfügbar</span></li>
-							<li><span class="compat-roadmap-name">Nintendo 64</span><span class="compat-badge is-soon">Bald verfügbar</span></li>
-						</ul>
-					</section>
-
 					<section class="compat-block reveal" aria-labelledby="compat-controllers-title">
 						<div class="compat-block-head">
 							<h3 id="compat-controllers-title">Controller-Unterstützung</h3>
-							<p>Erkennung läuft über SDL, die meisten modernen Pads laufen sofort.</p>
+							<p>Erkennung über SDL.</p>
 						</div>
 						<div class="compat-scroll" role="region" tabindex="0" aria-label="Controller-Kompatibilität, scrollbar">
 							<table class="compat-table compat-table-devices">
@@ -425,7 +419,6 @@
 			<div class="shell">
 				<div class="section-head reveal">
 					<h2>Vom Download<br>zum Spieleabend.</h2>
-					<p>Kein Account, kein Setup-Assistent und keine mitgelieferten Spiele. App laden, Dumps eigener Module hinzufügen und Start drücken.</p>
 				</div>
 				<div class="start-layout">
 					<div class="setup-steps">
